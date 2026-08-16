@@ -1,0 +1,206 @@
+# 設定ファイル (YAML形式)
+# マルチモーダル感情分析システム (表情 × 音声)
+
+# === Whisper音声認識設定 ===
+whisper:
+  # モデル名: "tiny", "base", "small", "medium", "large", "turbo"
+  # tiny: 最速・精度低, base: バランス, small/medium: 高精度, large/turbo: 最高精度
+  model: "base"
+  
+  # 実行デバイス: "cpu", "cuda"
+  device: "cpu"
+  
+  # 認識言語: "ja" (日本語), "en" (英語), "auto" (自動検出)
+  language: "ja"
+  
+  # 単語レベルのタイムスタンプを取得するか
+  word_timestamps: true
+  
+  # タスク: "transcribe" (文字起こし), "translate" (英訳)
+  task: "transcribe"
+  
+  # リアルタイム録音設定
+  # 録音チャンク時間（秒）- この時間ごとに音声認識を実行
+  chunk_duration: 5.0
+
+# === 顔検出設定 ===
+face_detection:
+  # 使用するモデル
+  # 選択肢: "haarcascade", "yolov8", "mediapipe", "retinaface"
+  model: "yolov8"
+  
+  # Haar Cascade設定 (オリジナル)
+  haarcascade:
+    model_path: "trained_models/detection_models/haarcascade_frontalface_default.xml"
+    scale_factor: 1.3
+    min_neighbors: 5
+  
+  # YOLOv8設定
+  yolov8:
+    # モデルサイズ: "n" (nano), "s" (small), "m" (medium)
+    model_size: "n"
+    # 信頼度閾値 (0.0 ~ 1.0)
+    confidence_threshold: 0.5
+    # IoU閾値 (Non-Maximum Suppression用)
+    iou_threshold: 0.45
+    # 最大検出数
+    max_detections: 10
+  
+  # MediaPipe設定 (代替モデル使用時)
+  mediapipe:
+    min_detection_confidence: 0.5
+    model_selection: 0  # 0: 2m以内, 1: 5m以内
+  
+  # RetinaFace設定 (代替モデル使用時)
+  retinaface:
+    threshold: 0.5
+    model: "retinaface"  # または "retinaface_mnet"
+
+# === 表情認識設定 ===
+emotion_recognition:
+  # 使用するモデル
+  # 選択肢: "original", "hsemotion", "fer", "deepface"
+  model: "original"
+  
+  # オリジナルモデル設定 (XCEPTION)
+  original:
+    model_path: "trained_models/emotion_models/fer2013_mini_XCEPTION.102-0.66.hdf5"
+    input_shape: [64, 64]  # モデルの入力サイズ
+  
+  # HSEmotion設定
+  hsemotion:
+    # モデル名
+    # 選択肢: "enet_b0_8_best_afew", "enet_b0_7_va_mtl", "enet_b2_8"
+    model_name: "enet_b0_8_best_afew"
+  
+  # FER設定 (代替モデル使用時)
+  fer:
+    mtcnn: false  # MTCNNによる顔検出を使用するか
+  
+  # DeepFace設定 (代替モデル使用時)
+  deepface:
+    model_name: "Emotion"
+    detector_backend: "skip"  # 顔検出をスキップ (外部で検出済み)
+
+  # 感情スムージング設定
+  smoothing:
+    # 有効化
+    enabled: true
+    # スムージングウィンドウサイズ (フレーム数)
+    window_size: 6
+    # 最小信頼度 (これ以下は無視)
+    min_confidence: 0.3
+
+# === カメラ設定 ===
+camera:
+  # カメラデバイスID
+  device_id: 0
+  # 解像度
+  width: 640
+  height: 480
+  # FPS
+  fps: 30
+  # 自動露出
+  auto_exposure: true
+
+# === 入出力設定 ===
+input:
+  # 入力ソース: "camera", "video", "image"
+  source: "camera"
+  # 動画/画像ファイルパス (sourceが "video" または "image" の場合)
+  file_path: null
+
+output:
+  # 結果を保存するか
+  save_results: true
+  # 出力ディレクトリ
+  output_dir: "output"
+  # 動画として保存するか
+  save_video: false
+  # 動画コーデック (MJPG, XVID, mp4v, など)
+  video_codec: "mp4v"
+  # 動画FPS
+  video_fps: 30
+  # CSVとして保存するか (タイムスタンプ、感情、信頼度)
+  save_csv: true
+
+# === 表示設定 ===
+display:
+  # ウィンドウ表示
+  show_window: true
+  # ウィンドウタイトル
+  window_title: "Emotion Detection"
+  # フルスクリーン
+  fullscreen: false
+  
+  # FPS表示
+  show_fps: true
+  # 信頼度表示
+  show_confidence: true
+  # 顔のバウンディングボックス表示
+  show_bbox: true
+  # ランドマーク表示 (利用可能な場合)
+  show_landmarks: false
+  
+  # フォント設定
+  font:
+    scale: 0.6
+    thickness: 2
+    color: [255, 255, 255]  # RGB
+  
+  # バウンディングボックス設定
+  bbox:
+    thickness: 2
+    # カラーモード: "emotion" (感情別), "confidence" (信頼度別), "fixed" (固定色)
+    color_mode: "emotion"
+    fixed_color: [0, 255, 0]  # RGB (color_mode="fixed"の場合)
+  
+  # 感情別カラー設定 (BGR形式)
+  emotion_colors:
+    angry: [0, 0, 255]       # 赤
+    contempt: [128, 0, 128]  # 紫
+    disgust: [0, 128, 0]     # 緑
+    fear: [128, 128, 0]      # シアン
+    happy: [0, 255, 255]     # 黄色
+    neutral: [128, 128, 128] # グレー
+    sad: [255, 0, 0]         # 青
+    sadness: [255, 255, 0]   # 水色
+    surprise: [0, 128, 255]  # オレンジ
+
+# === ログ設定 ===
+logging:
+  # ログ有効化
+  enabled: true
+  # ログレベル: "DEBUG", "INFO", "WARNING", "ERROR"
+  level: "INFO"
+  # ログ出力先
+  output_dir: "logs"
+  # ログファイル名フォーマット (strftime形式)
+  filename_format: "emotion_log_%Y%m%d_%H%M%S.log"
+  # コンソール出力
+  console_output: true
+
+# === パフォーマンス設定 ===
+performance:
+  # GPU使用
+  use_gpu: false
+  # スレッド数 (0: 自動)
+  num_threads: 0
+  # フレームスキップ (処理が重い場合)
+  frame_skip: 0
+  # リサイズ (処理前に画像をリサイズ)
+  resize:
+    enabled: false
+    width: 320
+    height: 240
+
+# === デバッグ設定 ===
+debug:
+  # デバッグモード
+  enabled: false
+  # 処理時間表示
+  show_timing: false
+  # 顔切り出し画像を保存
+  save_face_crops: false
+  # 顔切り出し画像の保存先
+  face_crops_dir: "debug/faces"

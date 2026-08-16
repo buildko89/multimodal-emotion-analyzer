@@ -1,0 +1,97 @@
+# Python 3.12 対応 依存パッケージ
+# Windows/Linux クロスプラットフォーム対応
+# マルチモーダル感情分析システム (表情認識 + 音声認識)
+
+# === 音声認識 (Whisper) ===
+# OpenAI Whisper (音声認識・文字起こし)
+openai-whisper>=20231117
+
+# Whisper 依存パッケージ
+# torch/torchvision は下記「顔検出」セクションで指定
+torchaudio>=2.1.0
+numba>=0.57.0
+ffmpeg-python>=0.2.0
+scipy>=1.11.0
+
+# === コア依存 ===
+# OpenCV (画像処理・カメラ入力)
+opencv-python>=4.9.0
+
+# NumPy (数値計算)
+numpy>=1.26.0,<2.0.0
+
+# === 顔検出 (推奨構成: YOLOv8-Face) ===
+# Ultralytics YOLOv8 (顔検出)
+ultralytics>=8.1.0
+
+# PyTorch (YOLOv8のバックエンド、CPU版)
+# GPU版が必要な場合は以下をコメントアウトし、PyTorchの公式サイトから適切なバージョンをインストール
+# https://pytorch.org/get-started/locally/
+torch>=2.1.0
+torchvision>=0.16.0
+
+# === 表情認識 (推奨構成: HSEmotion) ===
+# HSEmotion (高速表情認識)
+hsemotion>=0.2.0
+
+# ONNX Runtime (HSEmotionの推論エンジン)
+onnxruntime>=1.16.0
+# GPU版が必要な場合は以下に置き換え
+# onnxruntime-gpu>=1.16.0
+
+# === 設定・ユーティリティ ===
+# PyYAML (設定ファイル読み込み)
+pyyaml>=6.0.1
+
+# Pillow (画像読み込み・保存)
+Pillow>=10.1.0
+
+# === オプション (代替モデル使用時のみ) ===
+# MediaPipe (使用中: 顔検出)
+mediapipe==0.10.14
+
+# protobuf (MediaPipe互換性のため固定)
+protobuf==4.25.8
+
+# InsightFace + RetinaFace (代替: 高精度顔検出)
+# insightface>=0.7.3
+# onnx>=1.15.0
+
+# FER (代替: 表情認識)
+# fer>=22.5.1
+
+# DeepFace (代替: 多機能表情認識)
+# deepface>=0.0.89
+tensorflow>=2.14.0
+
+# === 開発・デバッグ用 (オプション) ===
+# tqdm (プログレスバー - Whisperで使用)
+tqdm>=4.66.0
+
+# === プラットフォーム固有の注意事項 ===
+# 共通:
+#   - ffmpeg が必要 (Whisperの音声処理用)
+#     Windows: choco install ffmpeg / scoop install ffmpeg
+#     Ubuntu/Debian: sudo apt install ffmpeg
+#     macOS: brew install ffmpeg
+#
+# Windows:
+#   - Microsoft Visual C++ 14.0以上が必要 (Visual Studio Build Toolsでインストール)
+#   - https://visualstudio.microsoft.com/ja/downloads/
+#
+# Linux:
+#   - 追加パッケージが必要な場合があります:
+#     sudo apt-get update
+#     sudo apt-get install -y python3-dev libopencv-dev
+#
+# macOS:
+#   - Homebrewでの追加インストールが必要な場合:
+#     brew install opencv
+
+# === GPU対応 (オプション) ===
+# NVIDIA GPUを使用する場合:
+# 1. CUDA Toolkit 11.8以上をインストール
+# 2. cuDNN 8.6以上をインストール
+# 3. 以下のパッケージをインストール:
+#    pip install torch torchvision --index-url https://download.pytorch.org/whl/cu118
+#    pip install onnxruntime-gpu
