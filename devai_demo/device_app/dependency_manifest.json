@@ -1,0 +1,1230 @@
+{
+  "files": {
+    "/root/devai_ara/ara06_minimal_llm_20261013_v1/venv/bin/python": {
+      "resolved": "/usr/bin/python3.14",
+      "sha256": "2e715e55f676305189fcf9050c4b42d705b626116d82863c948cdaa0671f3bfa",
+      "bytes": 67672,
+      "mtime_ns": 1302044400000000000
+    },
+    "/root/devai_ara/ara06_recording_app_20261014_v1/app_venv/bin/python": {
+      "resolved": "/root/devai_ara/ara06_recording_app_20261014_v1/python/cpython-3.12.10-linux-aarch64-gnu/bin/python3.12",
+      "sha256": "5d66d5cf068a0303d145a34c9aa22e226a0f23ba7e0e9e573325b18002437313",
+      "bytes": 25652112,
+      "mtime_ns": 1791961836249521699
+    },
+    "/root/devai_ara/ara06_recording_app_20261014_v1/workspace/devai/driver_eval/runtime/emotion2vec/model/APACHE_LICENSE": {
+      "resolved": "/root/devai_ara/ara06_recording_app_20261014_v1/workspace/devai/driver_eval/runtime/emotion2vec/model/APACHE_LICENSE",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "bytes": 11358,
+      "mtime_ns": 1791961667121918537
+    },
+    "/root/devai_ara/ara06_recording_app_20261014_v1/workspace/devai/driver_eval/runtime/emotion2vec/model/ATTRIBUTION.txt": {
+      "resolved": "/root/devai_ara/ara06_recording_app_20261014_v1/workspace/devai/driver_eval/runtime/emotion2vec/model/ATTRIBUTION.txt",
+      "sha256": "1e9b2f2b7dc57dbc3b6ca85be8ec494d9913cfe0db71c4196b686701084f8139",
+      "bytes": 289,
+      "mtime_ns": 1791961667133918793
+    },
+    "/root/devai_ara/ara06_recording_app_20261014_v1/workspace/devai/driver_eval/runtime/emotion2vec/model/MODEL_LICENSE": {
+      "resolved": "/root/devai_ara/ara06_recording_app_20261014_v1/workspace/devai/driver_eval/runtime/emotion2vec/model/MODEL_LICENSE",
+      "sha256": "7dba975a2069691db4992b0592d70828b330d2f8a30a71450f4e152a554e84f8",
+      "bytes": 5306,
+      "mtime_ns": 1791961924435400446
+    },
+    "/root/devai_ara/ara06_recording_app_20261014_v1/workspace/devai/driver_eval/runtime/emotion2vec/model/README.md": {
+      "resolved": "/root/devai_ara/ara06_recording_app_20261014_v1/workspace/devai/driver_eval/runtime/emotion2vec/model/README.md",
+      "sha256": "b65c0bfa01bd991e255fa1ae7203c345f907d68eab90b1bf3482367d808e8274",
+      "bytes": 5749,
+      "mtime_ns": 1791961925255417916
+    },
+    "/root/devai_ara/ara06_recording_app_20261014_v1/workspace/devai/driver_eval/runtime/emotion2vec/model/config.yaml": {
+      "resolved": "/root/devai_ara/ara06_recording_app_20261014_v1/workspace/devai/driver_eval/runtime/emotion2vec/model/config.yaml",
+      "sha256": "50674ec187406b4f1208925594ceaf1f28f16a22333b5f2ac5b3d0cbffdd670e",
+      "bytes": 3170,
+      "mtime_ns": 1791961667145919049
+    },
+    "/root/devai_ara/ara06_recording_app_20261014_v1/workspace/devai/driver_eval/runtime/emotion2vec/model/configuration.json": {
+      "resolved": "/root/devai_ara/ara06_recording_app_20261014_v1/workspace/devai/driver_eval/runtime/emotion2vec/model/configuration.json",
+      "sha256": "8b6a745213025c7d4565f9f074cfef1b5cd5ef76e38e2a8f7f8a3db271e735b2",
+      "bytes": 343,
+      "mtime_ns": 1791961667153919219
+    },
+    "/root/devai_ara/ara06_recording_app_20261014_v1/workspace/devai/driver_eval/runtime/emotion2vec/model/model.pt": {
+      "resolved": "/root/devai_ara/ara06_recording_app_20261014_v1/workspace/devai/driver_eval/runtime/emotion2vec/model/model.pt",
+      "sha256": "60710b5aae1dbe69bdac8920028fb05882d4314fd09031922b4b61ee9e7aadbd",
+      "bytes": 1118245678,
+      "mtime_ns": 1791961923719385192
+    },
+    "/root/devai_ara/ara06_recording_app_20261014_v1/workspace/devai/driver_eval/runtime/emotion2vec/model/tokens.txt": {
+      "resolved": "/root/devai_ara/ara06_recording_app_20261014_v1/workspace/devai/driver_eval/runtime/emotion2vec/model/tokens.txt",
+      "sha256": "866121e470057b847d7a50e9923509141fb2924392f53385a186482a1ec0fb7f",
+      "bytes": 119,
+      "mtime_ns": 1791961926047434790
+    },
+    "/root/devai_ara/ara06_recording_app_20261014_v1/workspace/devai/driver_eval/runtime/face_landmarker/model/ATTRIBUTION.txt": {
+      "resolved": "/root/devai_ara/ara06_recording_app_20261014_v1/workspace/devai/driver_eval/runtime/face_landmarker/model/ATTRIBUTION.txt",
+      "sha256": "f645612ecff8b0ddd4dd1f8ee420ccc7f6add45918f1ce325b51edef02437ea7",
+      "bytes": 184,
+      "mtime_ns": 1791961928471486433
+    },
+    "/root/devai_ara/ara06_recording_app_20261014_v1/workspace/devai/driver_eval/runtime/face_landmarker/model/apache_license.txt": {
+      "resolved": "/root/devai_ara/ara06_recording_app_20261014_v1/workspace/devai/driver_eval/runtime/face_landmarker/model/apache_license.txt",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "bytes": 11358,
+      "mtime_ns": 1791961927683469645
+    },
+    "/root/devai_ara/ara06_recording_app_20261014_v1/workspace/devai/driver_eval/runtime/face_landmarker/model/blendshape_card.pdf": {
+      "resolved": "/root/devai_ara/ara06_recording_app_20261014_v1/workspace/devai/driver_eval/runtime/face_landmarker/model/blendshape_card.pdf",
+      "sha256": "c8e9cf60a39998f4b341740623917590e050d1c97004e2de4568d84e026445ae",
+      "bytes": 2324099,
+      "mtime_ns": 1791961930175522736
+    },
+    "/root/devai_ara/ara06_recording_app_20261014_v1/workspace/devai/driver_eval/runtime/face_landmarker/model/face_detector_card.pdf": {
+      "resolved": "/root/devai_ara/ara06_recording_app_20261014_v1/workspace/devai/driver_eval/runtime/face_landmarker/model/face_detector_card.pdf",
+      "sha256": "cd335c06fc0de7807cd815a0777a697932598bcdb28fa98adaaabf847485f758",
+      "bytes": 434425,
+      "mtime_ns": 1791961930991540121
+    },
+    "/root/devai_ara/ara06_recording_app_20261014_v1/workspace/devai/driver_eval/runtime/face_landmarker/model/face_landmarker.task": {
+      "resolved": "/root/devai_ara/ara06_recording_app_20261014_v1/workspace/devai/driver_eval/runtime/face_landmarker/model/face_landmarker.task",
+      "sha256": "64184e229b263107bc2b804c6625db1341ff2bb731874b0bcc2fe6544e0bc9ff",
+      "bytes": 3758596,
+      "mtime_ns": 1791961933047583924
+    },
+    "/root/devai_ara/ara06_recording_app_20261014_v1/workspace/devai/driver_eval/runtime/face_landmarker/model/face_mesh_card.pdf": {
+      "resolved": "/root/devai_ara/ara06_recording_app_20261014_v1/workspace/devai/driver_eval/runtime/face_landmarker/model/face_mesh_card.pdf",
+      "sha256": "c6add060f4ebfb37b2690136b6c711c7e5fcb7038baa2649ae3338b83979565a",
+      "bytes": 3476420,
+      "mtime_ns": 1791961935095627556
+    },
+    "/root/devai_ara/ara06_recording_app_20261014_v1/workspace/devai/driver_eval/runtime/hand_landmarker/model/hand_landmarker.task": {
+      "resolved": "/root/devai_ara/ara06_recording_app_20261014_v1/workspace/devai/driver_eval/runtime/hand_landmarker/model/hand_landmarker.task",
+      "sha256": "fbc2a30080c3c557093b5ddfc334698132eb341044ccee322ccf8bcf3607cde1",
+      "bytes": 7819105,
+      "mtime_ns": 1791961939951731013
+    },
+    "/root/devai_ara/ara06_recording_app_20261014_v1/workspace/devai/driver_eval/runtime/sensevoice/.venv/bin/python": {
+      "resolved": "/root/devai_ara/ara06_recording_app_20261014_v1/python/cpython-3.12.10-linux-aarch64-gnu/bin/python3.12",
+      "sha256": "5d66d5cf068a0303d145a34c9aa22e226a0f23ba7e0e9e573325b18002437313",
+      "bytes": 25652112,
+      "mtime_ns": 1791961836249521699
+    },
+    "/root/devai_ara/ara06_recording_app_20261014_v1/workspace/devai/driver_eval/runtime/sensevoice/model/ATTRIBUTION.md": {
+      "resolved": "/root/devai_ara/ara06_recording_app_20261014_v1/workspace/devai/driver_eval/runtime/sensevoice/model/ATTRIBUTION.md",
+      "sha256": "923ad79525a0f759dc0bed1ae1faa18362c92fb9306e2c99ed3a3ec6e391b1b0",
+      "bytes": 1595,
+      "mtime_ns": 1791961942383782826
+    },
+    "/root/devai_ara/ara06_recording_app_20261014_v1/workspace/devai/driver_eval/runtime/sensevoice/model/MODEL_LICENSE": {
+      "resolved": "/root/devai_ara/ara06_recording_app_20261014_v1/workspace/devai/driver_eval/runtime/sensevoice/model/MODEL_LICENSE",
+      "sha256": "7dba975a2069691db4992b0592d70828b330d2f8a30a71450f4e152a554e84f8",
+      "bytes": 5306,
+      "mtime_ns": 1791962159184401633
+    },
+    "/root/devai_ara/ara06_recording_app_20261014_v1/workspace/devai/driver_eval/runtime/sensevoice/model/README.md": {
+      "resolved": "/root/devai_ara/ara06_recording_app_20261014_v1/workspace/devai/driver_eval/runtime/sensevoice/model/README.md",
+      "sha256": "6add90487ea3d685b6604ad0932b565fc5cf7e9daaf8aebc674de49da4560958",
+      "bytes": 11952,
+      "mtime_ns": 1791962159268403423
+    },
+    "/root/devai_ara/ara06_recording_app_20261014_v1/workspace/devai/driver_eval/runtime/sensevoice/model/SenseVoice_CODE_LICENSE": {
+      "resolved": "/root/devai_ara/ara06_recording_app_20261014_v1/workspace/devai/driver_eval/runtime/sensevoice/model/SenseVoice_CODE_LICENSE",
+      "sha256": "4bc3bffe14ebe38cc67309991e04f92866835eac1c5e2e1abd37163f67c6de5f",
+      "bytes": 1062,
+      "mtime_ns": 1791962159364405468
+    },
+    "/root/devai_ara/ara06_recording_app_20261014_v1/workspace/devai/driver_eval/runtime/sensevoice/model/SenseVoice_README.txt": {
+      "resolved": "/root/devai_ara/ara06_recording_app_20261014_v1/workspace/devai/driver_eval/runtime/sensevoice/model/SenseVoice_README.txt",
+      "sha256": "ce31cd7c065d40fa95829a191870c6f9b25feb94d23500d6bc522927857f721f",
+      "bytes": 26816,
+      "mtime_ns": 1791962159516408706
+    },
+    "/root/devai_ara/ara06_recording_app_20261014_v1/workspace/devai/driver_eval/runtime/sensevoice/model/am.mvn": {
+      "resolved": "/root/devai_ara/ara06_recording_app_20261014_v1/workspace/devai/driver_eval/runtime/sensevoice/model/am.mvn",
+      "sha256": "29b3c740a2c0cfc6b308126d31d7f265fa2be74f3bb095cd2f143ea970896ae5",
+      "bytes": 11203,
+      "mtime_ns": 1791961941551765100
+    },
+    "/root/devai_ara/ara06_recording_app_20261014_v1/workspace/devai/driver_eval/runtime/sensevoice/model/chn_jpn_yue_eng_ko_spectok.bpe.model": {
+      "resolved": "/root/devai_ara/ara06_recording_app_20261014_v1/workspace/devai/driver_eval/runtime/sensevoice/model/chn_jpn_yue_eng_ko_spectok.bpe.model",
+      "sha256": "aa87f86064c3730d799ddf7af3c04659151102cba548bce325cf06ba4da4e6a8",
+      "bytes": 377341,
+      "mtime_ns": 1791961943559807880
+    },
+    "/root/devai_ara/ara06_recording_app_20261014_v1/workspace/devai/driver_eval/runtime/sensevoice/model/config.yaml": {
+      "resolved": "/root/devai_ara/ara06_recording_app_20261014_v1/workspace/devai/driver_eval/runtime/sensevoice/model/config.yaml",
+      "sha256": "f71e239ba36705564b5bf2d2ffd07eece07b8e3f2bbf6d2c99d8df856339ac19",
+      "bytes": 1855,
+      "mtime_ns": 1791961944459827055
+    },
+    "/root/devai_ara/ara06_recording_app_20261014_v1/workspace/devai/driver_eval/runtime/sensevoice/model/configuration.json": {
+      "resolved": "/root/devai_ara/ara06_recording_app_20261014_v1/workspace/devai/driver_eval/runtime/sensevoice/model/configuration.json",
+      "sha256": "02810a7f8e9e8aee10370a265f7e799728ce25b4c00cdbf4602b303ee395a38e",
+      "bytes": 396,
+      "mtime_ns": 1791961945415847422
+    },
+    "/root/devai_ara/ara06_recording_app_20261014_v1/workspace/devai/driver_eval/runtime/sensevoice/model/model.pt": {
+      "resolved": "/root/devai_ara/ara06_recording_app_20261014_v1/workspace/devai/driver_eval/runtime/sensevoice/model/model.pt",
+      "sha256": "833ca2dcfdf8ec91bd4f31cfac36d6124e0c459074d5e909aec9cabe6204a3ea",
+      "bytes": 936291369,
+      "mtime_ns": 1791962159168401292
+    },
+    "/root/devai_ara/ara06_recording_app_20261014_v1/workspace/multimodal-emotion-analyzer/trained_models/emotion_models/fer2013_mini_XCEPTION.102-0.66.hdf5": {
+      "resolved": "/root/devai_ara/ara06_recording_app_20261014_v1/workspace/multimodal-emotion-analyzer/trained_models/emotion_models/fer2013_mini_XCEPTION.102-0.66.hdf5",
+      "sha256": "59534287fdfb125e30a94400296c25ea9f5d706fca93dd8adbbbed916799ea0e",
+      "bytes": 872856,
+      "mtime_ns": 1791962167204572498
+    },
+    "/root/devai_ara/ara06_recording_app_20261014_v1/workspace/multimodal-emotion-analyzer/trained_models/mediapipe/blaze_face_short_range.tflite": {
+      "resolved": "/root/devai_ara/ara06_recording_app_20261014_v1/workspace/multimodal-emotion-analyzer/trained_models/mediapipe/blaze_face_short_range.tflite",
+      "sha256": "b4578f35940bf5a1a655214a1cce5cab13eba73c1297cd78e1a04c2380b0152f",
+      "bytes": 229746,
+      "mtime_ns": 1791962167272573947
+    },
+    "/root/devai_ara/ara06_recording_app_20261014_v1/workspace/multimodal-emotion-analyzer/trained_models/whisper/base.pt": {
+      "resolved": "/root/devai_ara/ara06_recording_app_20261014_v1/workspace/multimodal-emotion-analyzer/trained_models/whisper/base.pt",
+      "sha256": "ed3a0b6b1c0edf879ad9b11b1af5a0e6ab5db9205f891f668f8b0e6c6326e34e",
+      "bytes": 145262807,
+      "mtime_ns": 1791962201329299505
+    },
+    "/usr/lib/libaraclient_aarch64.so": {
+      "resolved": "/usr/lib/libaraclient_aarch64.so",
+      "sha256": "b1f3bd5a32a3b2fa74197290eb6914f8ce86591b2aec740281e077c7c0759011",
+      "bytes": 2450352,
+      "mtime_ns": 1302044400000000000
+    },
+    "/usr/share/llm/Qwen2.5-7B-Instruct/.cache/huggingface/.gitignore": {
+      "resolved": "/usr/share/llm/Qwen2.5-7B-Instruct/.cache/huggingface/.gitignore",
+      "sha256": "684888c0ebb17f374298b65ee2807526c066094c701bcc7ebbe1c1095f494fc1",
+      "bytes": 1,
+      "mtime_ns": 1791897870965017038
+    },
+    "/usr/share/llm/Qwen2.5-7B-Instruct/.cache/huggingface/download/.gitattributes.lock": {
+      "resolved": "/usr/share/llm/Qwen2.5-7B-Instruct/.cache/huggingface/download/.gitattributes.lock",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "mtime_ns": 1791898256588675061
+    },
+    "/usr/share/llm/Qwen2.5-7B-Instruct/.cache/huggingface/download/.gitattributes.metadata": {
+      "resolved": "/usr/share/llm/Qwen2.5-7B-Instruct/.cache/huggingface/download/.gitattributes.metadata",
+      "sha256": "de539ff53aff915ba27a3471ad5c3b0aa58c9bd52c2204deb695d0f2a6950200",
+      "bytes": 101,
+      "mtime_ns": 1791897872166356557
+    },
+    "/usr/share/llm/Qwen2.5-7B-Instruct/.cache/huggingface/download/LICENSE.lock": {
+      "resolved": "/usr/share/llm/Qwen2.5-7B-Instruct/.cache/huggingface/download/LICENSE.lock",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "mtime_ns": 1791898256572675645
+    },
+    "/usr/share/llm/Qwen2.5-7B-Instruct/.cache/huggingface/download/LICENSE.metadata": {
+      "resolved": "/usr/share/llm/Qwen2.5-7B-Instruct/.cache/huggingface/download/LICENSE.metadata",
+      "sha256": "bd37eb65a793383329d53a4a17263862d74854b5ffec33c3110b696a3c372345",
+      "bytes": 101,
+      "mtime_ns": 1791897872155639369
+    },
+    "/usr/share/llm/Qwen2.5-7B-Instruct/.cache/huggingface/download/README.md.lock": {
+      "resolved": "/usr/share/llm/Qwen2.5-7B-Instruct/.cache/huggingface/download/README.md.lock",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "mtime_ns": 1791898256572675645
+    },
+    "/usr/share/llm/Qwen2.5-7B-Instruct/.cache/huggingface/download/README.md.metadata": {
+      "resolved": "/usr/share/llm/Qwen2.5-7B-Instruct/.cache/huggingface/download/README.md.metadata",
+      "sha256": "63444409af10544c5e20aec581afa6229644565aa9dcfd20df74412db28b7a21",
+      "bytes": 101,
+      "mtime_ns": 1791897872166356557
+    },
+    "/usr/share/llm/Qwen2.5-7B-Instruct/.cache/huggingface/download/SBOM-Qwen2.5-7B-Instruct-Ara240-2.0.4.spdx.json.lock": {
+      "resolved": "/usr/share/llm/Qwen2.5-7B-Instruct/.cache/huggingface/download/SBOM-Qwen2.5-7B-Instruct-Ara240-2.0.4.spdx.json.lock",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "mtime_ns": 1791898256572675645
+    },
+    "/usr/share/llm/Qwen2.5-7B-Instruct/.cache/huggingface/download/SBOM-Qwen2.5-7B-Instruct-Ara240-2.0.4.spdx.json.metadata": {
+      "resolved": "/usr/share/llm/Qwen2.5-7B-Instruct/.cache/huggingface/download/SBOM-Qwen2.5-7B-Instruct-Ara240-2.0.4.spdx.json.metadata",
+      "sha256": "693e24313ab24c44dfffa5c8cfe0d47a7e6740d8e8d8e30b63b29b48acb5dde3",
+      "bytes": 101,
+      "mtime_ns": 1791897872143780503
+    },
+    "/usr/share/llm/Qwen2.5-7B-Instruct/.cache/huggingface/download/config.json.lock": {
+      "resolved": "/usr/share/llm/Qwen2.5-7B-Instruct/.cache/huggingface/download/config.json.lock",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "mtime_ns": 1791898256584675207
+    },
+    "/usr/share/llm/Qwen2.5-7B-Instruct/.cache/huggingface/download/config.json.metadata": {
+      "resolved": "/usr/share/llm/Qwen2.5-7B-Instruct/.cache/huggingface/download/config.json.metadata",
+      "sha256": "cf3a97db2827d9230b7264bbe3de3b0f14413132cb408d25142c07755011aa1c",
+      "bytes": 101,
+      "mtime_ns": 1791897872152845482
+    },
+    "/usr/share/llm/Qwen2.5-7B-Instruct/.cache/huggingface/download/generation_config.json.lock": {
+      "resolved": "/usr/share/llm/Qwen2.5-7B-Instruct/.cache/huggingface/download/generation_config.json.lock",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "mtime_ns": 1791898256592674915
+    },
+    "/usr/share/llm/Qwen2.5-7B-Instruct/.cache/huggingface/download/generation_config.json.metadata": {
+      "resolved": "/usr/share/llm/Qwen2.5-7B-Instruct/.cache/huggingface/download/generation_config.json.metadata",
+      "sha256": "8ffb7d9db1dcfffd2dde046808a7aae85ba6529308211de3f0b0f4c8486cba9e",
+      "bytes": 101,
+      "mtime_ns": 1791897872155639369
+    },
+    "/usr/share/llm/Qwen2.5-7B-Instruct/.cache/huggingface/download/model.dvm.json.lock": {
+      "resolved": "/usr/share/llm/Qwen2.5-7B-Instruct/.cache/huggingface/download/model.dvm.json.lock",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "mtime_ns": 1791898256596674769
+    },
+    "/usr/share/llm/Qwen2.5-7B-Instruct/.cache/huggingface/download/model.dvm.json.metadata": {
+      "resolved": "/usr/share/llm/Qwen2.5-7B-Instruct/.cache/huggingface/download/model.dvm.json.metadata",
+      "sha256": "6ddcfa1e4ee93435d0082b43b1413a27f5397d47e19448685b0edd1d27b65afd",
+      "bytes": 100,
+      "mtime_ns": 1791897872143780503
+    },
+    "/usr/share/llm/Qwen2.5-7B-Instruct/.cache/huggingface/download/model.dvm.lock": {
+      "resolved": "/usr/share/llm/Qwen2.5-7B-Instruct/.cache/huggingface/download/model.dvm.lock",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "mtime_ns": 1791899790956864461
+    },
+    "/usr/share/llm/Qwen2.5-7B-Instruct/.cache/huggingface/download/model.dvm.metadata": {
+      "resolved": "/usr/share/llm/Qwen2.5-7B-Instruct/.cache/huggingface/download/model.dvm.metadata",
+      "sha256": "311ecd1620b201625a83708b0c955b1596b6f8d80337e11bf3823d1c2405ff16",
+      "bytes": 125,
+      "mtime_ns": 1791899790959315543
+    },
+    "/usr/share/llm/Qwen2.5-7B-Instruct/.cache/huggingface/download/tokenizer/config.json.lock": {
+      "resolved": "/usr/share/llm/Qwen2.5-7B-Instruct/.cache/huggingface/download/tokenizer/config.json.lock",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "mtime_ns": 1791898256616674039
+    },
+    "/usr/share/llm/Qwen2.5-7B-Instruct/.cache/huggingface/download/tokenizer/config.json.metadata": {
+      "resolved": "/usr/share/llm/Qwen2.5-7B-Instruct/.cache/huggingface/download/tokenizer/config.json.metadata",
+      "sha256": "df1572b51722b415e6d940b4977b7ed3c140cf24e0dffb14e5266310227115b8",
+      "bytes": 101,
+      "mtime_ns": 1791897873052665672
+    },
+    "/usr/share/llm/Qwen2.5-7B-Instruct/.cache/huggingface/download/tokenizer/generation_config.json.lock": {
+      "resolved": "/usr/share/llm/Qwen2.5-7B-Instruct/.cache/huggingface/download/tokenizer/generation_config.json.lock",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "mtime_ns": 1791898256612674185
+    },
+    "/usr/share/llm/Qwen2.5-7B-Instruct/.cache/huggingface/download/tokenizer/generation_config.json.metadata": {
+      "resolved": "/usr/share/llm/Qwen2.5-7B-Instruct/.cache/huggingface/download/tokenizer/generation_config.json.metadata",
+      "sha256": "ea522da2a19ff1fd26c58680c3b0a26ef81c251de5af3bb74c6a1181b58aabec",
+      "bytes": 100,
+      "mtime_ns": 1791897873056610822
+    },
+    "/usr/share/llm/Qwen2.5-7B-Instruct/.cache/huggingface/download/tokenizer/tokenizer.json.lock": {
+      "resolved": "/usr/share/llm/Qwen2.5-7B-Instruct/.cache/huggingface/download/tokenizer/tokenizer.json.lock",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "mtime_ns": 1791898256616674039
+    },
+    "/usr/share/llm/Qwen2.5-7B-Instruct/.cache/huggingface/download/tokenizer/tokenizer.json.metadata": {
+      "resolved": "/usr/share/llm/Qwen2.5-7B-Instruct/.cache/huggingface/download/tokenizer/tokenizer.json.metadata",
+      "sha256": "cad3d99a135ea7832533d6cb159234a9b37bb225b2ab2185a29b02770a1d2f66",
+      "bytes": 100,
+      "mtime_ns": 1791897874392937550
+    },
+    "/usr/share/llm/Qwen2.5-7B-Instruct/.cache/huggingface/download/tokenizer/tokenizer_config.json.lock": {
+      "resolved": "/usr/share/llm/Qwen2.5-7B-Instruct/.cache/huggingface/download/tokenizer/tokenizer_config.json.lock",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "mtime_ns": 1791898256624673747
+    },
+    "/usr/share/llm/Qwen2.5-7B-Instruct/.cache/huggingface/download/tokenizer/tokenizer_config.json.metadata": {
+      "resolved": "/usr/share/llm/Qwen2.5-7B-Instruct/.cache/huggingface/download/tokenizer/tokenizer_config.json.metadata",
+      "sha256": "5552001dbd424670668bc6e2e42a548523f63ca135019dea901b1608887b38e3",
+      "bytes": 101,
+      "mtime_ns": 1791897873060644678
+    },
+    "/usr/share/llm/Qwen2.5-7B-Instruct/.cache/huggingface/download/tokenizer/vocab.json.lock": {
+      "resolved": "/usr/share/llm/Qwen2.5-7B-Instruct/.cache/huggingface/download/tokenizer/vocab.json.lock",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "mtime_ns": 1791898256628673601
+    },
+    "/usr/share/llm/Qwen2.5-7B-Instruct/.cache/huggingface/download/tokenizer/vocab.json.metadata": {
+      "resolved": "/usr/share/llm/Qwen2.5-7B-Instruct/.cache/huggingface/download/tokenizer/vocab.json.metadata",
+      "sha256": "310f9cb538dd96e67fafe86a086186d5ab5cdb671ebac15d4f61113fcbfbce45",
+      "bytes": 100,
+      "mtime_ns": 1791897873989953497
+    },
+    "/usr/share/llm/Qwen2.5-7B-Instruct/.gitattributes": {
+      "resolved": "/usr/share/llm/Qwen2.5-7B-Instruct/.gitattributes",
+      "sha256": "c31e218eaad12606e022e35fd2987643928962f32f1a1f2c7272bcc6f13b7d77",
+      "bytes": 1561,
+      "mtime_ns": 1791897872118357771
+    },
+    "/usr/share/llm/Qwen2.5-7B-Instruct/LICENSE": {
+      "resolved": "/usr/share/llm/Qwen2.5-7B-Instruct/LICENSE",
+      "sha256": "58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd",
+      "bytes": 11357,
+      "mtime_ns": 1791897872118357771
+    },
+    "/usr/share/llm/Qwen2.5-7B-Instruct/README.md": {
+      "resolved": "/usr/share/llm/Qwen2.5-7B-Instruct/README.md",
+      "sha256": "abf74dc34b0fda9e70f627f86556fa74f3b400e0c910e6896e92d6c5cc05f24a",
+      "bytes": 4916,
+      "mtime_ns": 1791897872124166999
+    },
+    "/usr/share/llm/Qwen2.5-7B-Instruct/SBOM-Qwen2.5-7B-Instruct-Ara240-2.0.4.spdx.json": {
+      "resolved": "/usr/share/llm/Qwen2.5-7B-Instruct/SBOM-Qwen2.5-7B-Instruct-Ara240-2.0.4.spdx.json",
+      "sha256": "d2a79fe373547b49306a21f8ac32279b347e803c89f7cf941dc76bc4fe5a377a",
+      "bytes": 1046,
+      "mtime_ns": 1791897872106358075
+    },
+    "/usr/share/llm/Qwen2.5-7B-Instruct/config.json": {
+      "resolved": "/usr/share/llm/Qwen2.5-7B-Instruct/config.json",
+      "sha256": "a051171f8d032c2680b05d05ef875399c1a2a13586c1194efa58f0814cafe527",
+      "bytes": 346,
+      "mtime_ns": 1791897872090358480
+    },
+    "/usr/share/llm/Qwen2.5-7B-Instruct/generation_config.json": {
+      "resolved": "/usr/share/llm/Qwen2.5-7B-Instruct/generation_config.json",
+      "sha256": "eefaecb3db3c7cac9306834d47dc8934dee4e883b1cb121fbb700a20b593aa8f",
+      "bytes": 326,
+      "mtime_ns": 1791897872106358075
+    },
+    "/usr/share/llm/Qwen2.5-7B-Instruct/model.dvm": {
+      "resolved": "/usr/share/llm/Qwen2.5-7B-Instruct/model.dvm",
+      "sha256": "26e45af5cc1c496be784bb3f888e7c5803a955c12b9a0655ca84c5f7827a3cbc",
+      "bytes": 8165007360,
+      "mtime_ns": 1791899789348919955
+    },
+    "/usr/share/llm/Qwen2.5-7B-Instruct/model.dvm.json": {
+      "resolved": "/usr/share/llm/Qwen2.5-7B-Instruct/model.dvm.json",
+      "sha256": "99e16e18d8214ef3537e93c37f1606a36813d51d8cbefb3057f6f12f4948edbf",
+      "bytes": 198,
+      "mtime_ns": 1791897872094358378
+    },
+    "/usr/share/llm/Qwen2.5-7B-Instruct/tokenizer/config.json": {
+      "resolved": "/usr/share/llm/Qwen2.5-7B-Instruct/tokenizer/config.json",
+      "sha256": "7463bb0ea78315365e6c6b74de4e73bbcc8359dfb0c5a737584e077d42c0b03c",
+      "bytes": 663,
+      "mtime_ns": 1791897873022334897
+    },
+    "/usr/share/llm/Qwen2.5-7B-Instruct/tokenizer/generation_config.json": {
+      "resolved": "/usr/share/llm/Qwen2.5-7B-Instruct/tokenizer/generation_config.json",
+      "sha256": "3a8f9087e486054c8a4a08dae2e5a3ba62e23da212b5b8c08bc42cb983c3459f",
+      "bytes": 243,
+      "mtime_ns": 1791897873026334796
+    },
+    "/usr/share/llm/Qwen2.5-7B-Instruct/tokenizer/tokenizer.json": {
+      "resolved": "/usr/share/llm/Qwen2.5-7B-Instruct/tokenizer/tokenizer.json",
+      "sha256": "c0382117ea329cdf097041132f6d735924b697924d6f6fc3945713e96ce87539",
+      "bytes": 7031645,
+      "mtime_ns": 1791897874382300486
+    },
+    "/usr/share/llm/Qwen2.5-7B-Instruct/tokenizer/tokenizer_config.json": {
+      "resolved": "/usr/share/llm/Qwen2.5-7B-Instruct/tokenizer/tokenizer_config.json",
+      "sha256": "5b5d4f65d0acd3b2d56a35b56d374a36cbc1c8fa5cf3b3febbbfabf22f359583",
+      "bytes": 7305,
+      "mtime_ns": 1791897873038334493
+    },
+    "/usr/share/llm/Qwen2.5-7B-Instruct/tokenizer/vocab.json": {
+      "resolved": "/usr/share/llm/Qwen2.5-7B-Instruct/tokenizer/vocab.json",
+      "sha256": "ca10d7e9fb3ed18575dd1e277a2579c16d108e32f27439684afa0e10b1440910",
+      "bytes": 2776833,
+      "mtime_ns": 1791897873978310708
+    }
+  },
+  "python_environments": [
+    {
+      "interpreter": "/root/devai_ara/ara06_recording_app_20261014_v1/app_venv/bin/python",
+      "environment": {
+        "python": "3.12.10 (main, May 30 2025, 05:26:00) [GCC 6.3.0 20170516]",
+        "packages": [
+          [
+            "Markdown",
+            "3.11.1"
+          ],
+          [
+            "MarkupSafe",
+            "3.0.4"
+          ],
+          [
+            "PyYAML",
+            "6.0.3"
+          ],
+          [
+            "Pygments",
+            "2.21.0"
+          ],
+          [
+            "Werkzeug",
+            "3.1.9"
+          ],
+          [
+            "absl-py",
+            "2.5.1"
+          ],
+          [
+            "astunparse",
+            "1.6.3"
+          ],
+          [
+            "av",
+            "19.0.1"
+          ],
+          [
+            "certifi",
+            "2026.7.22"
+          ],
+          [
+            "cffi",
+            "2.1.1"
+          ],
+          [
+            "charset-normalizer",
+            "3.5.2"
+          ],
+          [
+            "contourpy",
+            "1.3.3"
+          ],
+          [
+            "cycler",
+            "0.12.1"
+          ],
+          [
+            "flatbuffers",
+            "25.12.19"
+          ],
+          [
+            "fonttools",
+            "4.66.1"
+          ],
+          [
+            "gast",
+            "0.7.0"
+          ],
+          [
+            "google-pasta",
+            "0.2.0"
+          ],
+          [
+            "grpcio",
+            "1.84.0"
+          ],
+          [
+            "h5py",
+            "3.16.0"
+          ],
+          [
+            "idna",
+            "3.20"
+          ],
+          [
+            "keras",
+            "3.15.1"
+          ],
+          [
+            "kiwisolver",
+            "1.5.1"
+          ],
+          [
+            "libclang",
+            "18.1.1"
+          ],
+          [
+            "markdown-it-py",
+            "4.2.0"
+          ],
+          [
+            "matplotlib",
+            "3.11.2"
+          ],
+          [
+            "mdurl",
+            "0.1.2"
+          ],
+          [
+            "mediapipe",
+            "1.0.1"
+          ],
+          [
+            "ml-dtypes",
+            "0.4.1"
+          ],
+          [
+            "namex",
+            "0.1.0"
+          ],
+          [
+            "numpy",
+            "1.26.4"
+          ],
+          [
+            "opencv-contrib-python",
+            "4.11.0.86"
+          ],
+          [
+            "opt_einsum",
+            "3.4.0"
+          ],
+          [
+            "optree",
+            "0.20.0"
+          ],
+          [
+            "packaging",
+            "26.3"
+          ],
+          [
+            "pillow",
+            "12.3.0"
+          ],
+          [
+            "protobuf",
+            "4.25.9"
+          ],
+          [
+            "psutil",
+            "7.2.2"
+          ],
+          [
+            "pycparser",
+            "3.11"
+          ],
+          [
+            "pyparsing",
+            "3.3.3"
+          ],
+          [
+            "python-dateutil",
+            "2.9.0.post0"
+          ],
+          [
+            "requests",
+            "2.34.2"
+          ],
+          [
+            "rich",
+            "15.0.0"
+          ],
+          [
+            "setuptools",
+            "84.0.0"
+          ],
+          [
+            "six",
+            "1.17.0"
+          ],
+          [
+            "sounddevice",
+            "0.5.6"
+          ],
+          [
+            "tensorboard",
+            "2.17.1"
+          ],
+          [
+            "tensorboard-data-server",
+            "0.7.2"
+          ],
+          [
+            "tensorflow",
+            "2.17.1"
+          ],
+          [
+            "termcolor",
+            "3.3.0"
+          ],
+          [
+            "typing_extensions",
+            "4.16.0"
+          ],
+          [
+            "urllib3",
+            "2.8.0"
+          ],
+          [
+            "wheel",
+            "0.48.0"
+          ],
+          [
+            "wrapt",
+            "2.5.1"
+          ]
+        ]
+      }
+    },
+    {
+      "interpreter": "/root/devai_ara/ara06_minimal_llm_20261013_v1/venv/bin/python",
+      "environment": {
+        "python": "3.14.4 (main, Apr  7 2026, 13:13:20) [GCC 15.2.0]",
+        "packages": [
+          [
+            "Jinja2",
+            "3.1.6"
+          ],
+          [
+            "MarkupSafe",
+            "3.0.4"
+          ],
+          [
+            "PyYAML",
+            "6.0.3"
+          ],
+          [
+            "annotated-types",
+            "0.8.0"
+          ],
+          [
+            "apache-tvm-ffi",
+            "0.1.14.post1"
+          ],
+          [
+            "attrs",
+            "26.1.0"
+          ],
+          [
+            "audioop-lts",
+            "0.2.2"
+          ],
+          [
+            "audioread",
+            "3.1.0"
+          ],
+          [
+            "av",
+            "19.0.1"
+          ],
+          [
+            "certifi",
+            "2026.7.22"
+          ],
+          [
+            "cffi",
+            "2.1.1"
+          ],
+          [
+            "charset-normalizer",
+            "3.5.2"
+          ],
+          [
+            "cloudpickle",
+            "3.1.2"
+          ],
+          [
+            "decorator",
+            "5.3.1"
+          ],
+          [
+            "fetch-models",
+            "1.0.0"
+          ],
+          [
+            "filelock",
+            "4.1.1"
+          ],
+          [
+            "fsspec",
+            "2026.9.0"
+          ],
+          [
+            "hf-xet",
+            "1.7.0"
+          ],
+          [
+            "huggingface_hub",
+            "0.36.2"
+          ],
+          [
+            "idna",
+            "3.20"
+          ],
+          [
+            "joblib",
+            "1.6.0"
+          ],
+          [
+            "jsonschema",
+            "4.26.0"
+          ],
+          [
+            "jsonschema-specifications",
+            "2025.9.1"
+          ],
+          [
+            "lazy-loader",
+            "0.6"
+          ],
+          [
+            "librosa",
+            "0.11.0"
+          ],
+          [
+            "llvmlite",
+            "0.50.0"
+          ],
+          [
+            "mpmath",
+            "1.3.0"
+          ],
+          [
+            "msgpack",
+            "1.2.3"
+          ],
+          [
+            "narwhals",
+            "2.27.1"
+          ],
+          [
+            "networkx",
+            "3.7"
+          ],
+          [
+            "numba",
+            "0.68.0"
+          ],
+          [
+            "numpy",
+            "2.4.3"
+          ],
+          [
+            "optimum-ara",
+            "1.0.0"
+          ],
+          [
+            "packaging",
+            "26.3"
+          ],
+          [
+            "pillow",
+            "12.1.1"
+          ],
+          [
+            "platformdirs",
+            "4.13.0"
+          ],
+          [
+            "pooch",
+            "1.9.0"
+          ],
+          [
+            "pycparser",
+            "3.11"
+          ],
+          [
+            "pydantic",
+            "2.12.5"
+          ],
+          [
+            "pydantic_core",
+            "2.41.5"
+          ],
+          [
+            "qwen-vl-utils",
+            "0.0.14"
+          ],
+          [
+            "referencing",
+            "0.37.0"
+          ],
+          [
+            "regex",
+            "2026.9.29"
+          ],
+          [
+            "requests",
+            "2.34.2"
+          ],
+          [
+            "rpds-py",
+            "2026.9.1"
+          ],
+          [
+            "safetensors",
+            "0.8.0"
+          ],
+          [
+            "scikit-learn",
+            "1.9.1"
+          ],
+          [
+            "scipy",
+            "1.18.1"
+          ],
+          [
+            "setuptools",
+            "84.0.0"
+          ],
+          [
+            "soundfile",
+            "0.13.1"
+          ],
+          [
+            "soxr",
+            "1.1.0"
+          ],
+          [
+            "standard-aifc",
+            "3.13.0"
+          ],
+          [
+            "standard-chunk",
+            "3.13.0"
+          ],
+          [
+            "standard-sunau",
+            "3.13.0"
+          ],
+          [
+            "sympy",
+            "1.14.0"
+          ],
+          [
+            "threadpoolctl",
+            "3.7.0"
+          ],
+          [
+            "tokenizers",
+            "0.22.2"
+          ],
+          [
+            "torch",
+            "2.9.0"
+          ],
+          [
+            "torchvision",
+            "0.24.0"
+          ],
+          [
+            "tqdm",
+            "4.70.1"
+          ],
+          [
+            "transformers",
+            "4.57.6"
+          ],
+          [
+            "typing-inspection",
+            "0.4.4"
+          ],
+          [
+            "typing_extensions",
+            "4.16.0"
+          ],
+          [
+            "urllib3",
+            "2.8.0"
+          ],
+          [
+            "xgrammar",
+            "0.2.8"
+          ]
+        ]
+      }
+    },
+    {
+      "interpreter": "/root/devai_ara/ara06_recording_app_20261014_v1/workspace/devai/driver_eval/runtime/sensevoice/.venv/bin/python",
+      "environment": {
+        "python": "3.12.10 (main, May 30 2025, 05:26:00) [GCC 6.3.0 20170516]",
+        "packages": [
+          [
+            "Jinja2",
+            "3.1.6"
+          ],
+          [
+            "MarkupSafe",
+            "3.0.4"
+          ],
+          [
+            "PyYAML",
+            "6.0.3"
+          ],
+          [
+            "RapidFuzz",
+            "3.14.6"
+          ],
+          [
+            "aliyun-python-sdk-core",
+            "2.16.1"
+          ],
+          [
+            "aliyun-python-sdk-kms",
+            "2.16.5"
+          ],
+          [
+            "antlr4-python3-runtime",
+            "4.9.3"
+          ],
+          [
+            "audioread",
+            "3.1.0"
+          ],
+          [
+            "certifi",
+            "2026.7.22"
+          ],
+          [
+            "cffi",
+            "2.1.1"
+          ],
+          [
+            "charset-normalizer",
+            "3.5.2"
+          ],
+          [
+            "cloudpickle",
+            "3.1.2"
+          ],
+          [
+            "crcmod",
+            "1.7"
+          ],
+          [
+            "cryptography",
+            "50.0.2"
+          ],
+          [
+            "decorator",
+            "5.3.1"
+          ],
+          [
+            "ffmpeg-python",
+            "0.2.0"
+          ],
+          [
+            "filelock",
+            "4.1.1"
+          ],
+          [
+            "fsspec",
+            "2026.9.0"
+          ],
+          [
+            "funasr",
+            "1.4.16"
+          ],
+          [
+            "future",
+            "1.0.0"
+          ],
+          [
+            "hf-xet",
+            "1.7.0"
+          ],
+          [
+            "huggingface_hub",
+            "0.36.2"
+          ],
+          [
+            "hydra-core",
+            "1.3.7"
+          ],
+          [
+            "idna",
+            "3.20"
+          ],
+          [
+            "jaconv",
+            "0.5.0"
+          ],
+          [
+            "jamo",
+            "0.4.1"
+          ],
+          [
+            "jieba",
+            "0.42.1"
+          ],
+          [
+            "jmespath",
+            "1.1.0"
+          ],
+          [
+            "joblib",
+            "1.6.0"
+          ],
+          [
+            "kaldiio",
+            "2.18.1"
+          ],
+          [
+            "lazy-loader",
+            "0.6"
+          ],
+          [
+            "librosa",
+            "0.11.0"
+          ],
+          [
+            "llvmlite",
+            "0.50.0"
+          ],
+          [
+            "modelscope",
+            "1.40.2"
+          ],
+          [
+            "modelscope-hub",
+            "0.4.6"
+          ],
+          [
+            "mpmath",
+            "1.3.0"
+          ],
+          [
+            "msgpack",
+            "1.2.3"
+          ],
+          [
+            "narwhals",
+            "2.27.1"
+          ],
+          [
+            "networkx",
+            "3.7"
+          ],
+          [
+            "numba",
+            "0.68.0"
+          ],
+          [
+            "numpy",
+            "1.26.4"
+          ],
+          [
+            "omegaconf",
+            "2.3.1"
+          ],
+          [
+            "oss2",
+            "2.19.1"
+          ],
+          [
+            "packaging",
+            "26.3"
+          ],
+          [
+            "platformdirs",
+            "4.13.0"
+          ],
+          [
+            "pooch",
+            "1.9.0"
+          ],
+          [
+            "protobuf",
+            "7.36.2"
+          ],
+          [
+            "pycparser",
+            "3.11"
+          ],
+          [
+            "pycryptodome",
+            "3.24.1"
+          ],
+          [
+            "pynndescent",
+            "0.6.0"
+          ],
+          [
+            "regex",
+            "2026.9.29"
+          ],
+          [
+            "requests",
+            "2.34.2"
+          ],
+          [
+            "safetensors",
+            "0.8.0"
+          ],
+          [
+            "scikit-learn",
+            "1.9.1"
+          ],
+          [
+            "scipy",
+            "1.17.1"
+          ],
+          [
+            "sentencepiece",
+            "0.2.2"
+          ],
+          [
+            "setuptools",
+            "84.0.0"
+          ],
+          [
+            "six",
+            "1.17.0"
+          ],
+          [
+            "soundfile",
+            "0.14.0"
+          ],
+          [
+            "soxr",
+            "1.1.0"
+          ],
+          [
+            "sympy",
+            "1.14.0"
+          ],
+          [
+            "tensorboardX",
+            "2.6.5"
+          ],
+          [
+            "threadpoolctl",
+            "3.7.0"
+          ],
+          [
+            "tiktoken",
+            "0.14.0"
+          ],
+          [
+            "tokenizers",
+            "0.22.2"
+          ],
+          [
+            "torch",
+            "2.9.0"
+          ],
+          [
+            "torch-complex",
+            "0.4.4"
+          ],
+          [
+            "torchaudio",
+            "2.9.0"
+          ],
+          [
+            "tqdm",
+            "4.70.1"
+          ],
+          [
+            "transformers",
+            "4.57.6"
+          ],
+          [
+            "typing_extensions",
+            "4.16.0"
+          ],
+          [
+            "umap-learn",
+            "0.5.12"
+          ],
+          [
+            "urllib3",
+            "2.8.0"
+          ],
+          [
+            "websockets",
+            "17.2"
+          ]
+        ]
+      }
+    }
+  ]
+}

@@ -6,6 +6,8 @@ whisper:
   # モデル名: "tiny", "base", "small", "medium", "large", "turbo"
   # tiny: 最速・精度低, base: バランス, small/medium: 高精度, large/turbo: 最高精度
   model: "base"
+  # 明示的に取得・検証した重みを使用する。音声を使う場合に取得すること。
+  model_path: "trained_models/whisper/base.pt"
   
   # 実行デバイス: "cpu", "cuda"
   device: "cpu"
@@ -26,8 +28,9 @@ whisper:
 # === 顔検出設定 ===
 face_detection:
   # 使用するモデル
-  # 選択肢: "haarcascade", "yolov8", "mediapipe", "retinaface"
-  model: "yolov8"
+  # 選択肢: "haarcascade", "mediapipe", "retinaface"
+  # 通常の Ultralytics YOLOv8 は COCO 物体検出モデルであり、顔検出には使用しない。
+  model: "mediapipe"
   
   # Haar Cascade設定 (オリジナル)
   haarcascade:
@@ -35,21 +38,17 @@ face_detection:
     scale_factor: 1.3
     min_neighbors: 5
   
-  # YOLOv8設定
-  yolov8:
-    # モデルサイズ: "n" (nano), "s" (small), "m" (medium)
-    model_size: "n"
-    # 信頼度閾値 (0.0 ~ 1.0)
-    confidence_threshold: 0.5
-    # IoU閾値 (Non-Maximum Suppression用)
-    iou_threshold: 0.45
-    # 最大検出数
-    max_detections: 10
-  
   # MediaPipe設定 (代替モデル使用時)
   mediapipe:
+    model_path: "trained_models/mediapipe/blaze_face_short_range.tflite"
     min_detection_confidence: 0.5
     model_selection: 0  # 0: 2m以内, 1: 5m以内
+
+  # 顔IDをフレーム間で維持する最小IoU tracker。
+  tracking:
+    enabled: true
+    iou_threshold: 0.3
+    max_missed_frames: 5
   
   # RetinaFace設定 (代替モデル使用時)
   retinaface:
@@ -92,6 +91,13 @@ emotion_recognition:
     min_confidence: 0.3
 
 # === カメラ設定 ===
+synchronization:
+  # 音声の0秒が動画の何秒に相当するか。負値も指定可能。
+  audio_offset_seconds: 0.0
+
+# 統合は同一区間に継続した1人だけが映っている場合に許可。
+# 話者の同定は行わず、単一人物という入力条件を前提とする。
+
 camera:
   # カメラデバイスID
   device_id: 0

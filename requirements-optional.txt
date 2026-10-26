@@ -1,0 +1,12 @@
+# Experimental backends; none is part of the reproducible default path.
+onnxruntime>=1.16.0
+hsemotion>=0.2.0
+torch>=2.1.0
+torchvision>=0.16.0
+torchaudio>=2.1.0
+
+# FER and DeepFace are deliberately not installed by default.
+# fer>=22.5.1
+# deepface>=0.0.89
+# retina-face>=0.0.17
+

@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "models": {
+    "mediapipe-face-short-range": {
+      "role": "face_detection",
+      "required_for": ["default"],
+      "destination": "trained_models/mediapipe/blaze_face_short_range.tflite",
+      "url": "https://storage.googleapis.com/mediapipe-models/face_detector/blaze_face_short_range/float16/1/blaze_face_short_range.tflite",
+      "sha256": "b4578f35940bf5a1a655214a1cce5cab13eba73c1297cd78e1a04c2380b0152f",
+      "license": "Apache-2.0",
+      "source": "https://ai.google.dev/edge/mediapipe/solutions/vision/face_detector",
+      "input": "RGB image; MediaPipe Tasks performs resize and normalization",
+      "output": "face bounding boxes, confidence, and six keypoints"
+    },
+    "fer2013-mini-xception": {
+      "role": "emotion_classification",
+      "required_for": ["default"],
+      "destination": "trained_models/emotion_models/fer2013_mini_XCEPTION.102-0.66.hdf5",
+      "url": "https://raw.githubusercontent.com/oarriaga/face_classification/b861d21b0e76ca5514cdeb5b56a689b7318584f4/trained_models/emotion_models/fer2013_mini_XCEPTION.102-0.66.hdf5",
+      "source_revision": "b861d21b0e76ca5514cdeb5b56a689b7318584f4",
+      "sha256": "59534287fdfb125e30a94400296c25ea9f5d706fca93dd8adbbbed916799ea0e",
+      "license": "MIT",
+      "source": "https://github.com/oarriaga/face_classification",
+      "input": "float32 grayscale NHWC [1,64,64,1], pixel range [-1,1]",
+      "output": "softmax [angry, disgust, fear, happy, sad, surprise, neutral]",
+      "notes": "Pinned to a source commit. SHA-256 was cross-checked against an independently hosted copy with the same historical filename."
+    },
+    "whisper-base": {
+      "role": "automatic_speech_recognition",
+      "required_for": ["audio"],
+      "destination": "trained_models/whisper/base.pt",
+      "url": "https://openaipublic.azureedge.net/main/whisper/models/ed3a0b6b1c0edf879ad9b11b1af5a0e6ab5db9205f891f668f8b0e6c6326e34e/base.pt",
+      "sha256": "ed3a0b6b1c0edf879ad9b11b1af5a0e6ab5db9205f891f668f8b0e6c6326e34e",
+      "license": "MIT",
+      "source": "https://github.com/openai/whisper",
+      "input": "16 kHz mono audio converted to log-Mel spectrogram",
+      "output": "timestamped text segments",
+      "large_download": true
+    }
+  }
+}

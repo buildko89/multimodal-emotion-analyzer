@@ -40,26 +40,18 @@ class MediaPipeEmotionDetector(EmotionDetector):
             # MediaPipe 0.10以降は tasks APIを使用
             from mediapipe.tasks import python
             from mediapipe.tasks.python import vision
-            import urllib.request
-            import os
-            
             config = self.config["face_detection"]["mediapipe"]
-            
-            # モデルファイルのパスとURL
-            model_dir = Path("trained_models/mediapipe")
-            model_dir.mkdir(parents=True, exist_ok=True)
-            model_path = model_dir / "blaze_face_short_range.tflite"
-            
-            # モデルファイルが存在しない場合はダウンロード
-            if not model_path.exists():
-                print(f"MediaPipeモデルをダウンロードしています... ({model_path})")
-                model_url = "https://storage.googleapis.com/mediapipe-models/face_detector/blaze_face_short_range/float16/latest/blaze_face_short_range.tflite"
-                try:
-                    urllib.request.urlretrieve(model_url, model_path)
-                    print("モデルのダウンロードが完了しました")
-                except Exception as e:
-                    print(f"モデルのダウンロードに失敗しました: {e}")
-                    raise
+            model_path = Path(config.get(
+                "model_path",
+                "trained_models/mediapipe/blaze_face_short_range.tflite",
+            ))
+            if not model_path.is_absolute():
+                model_path = Path(__file__).resolve().parent / model_path
+            if not model_path.is_file():
+                raise FileNotFoundError(
+                    f"MediaPipe face model is missing: {model_path}\n"
+                    "Run: python scripts/manage_models.py download --profile default"
+                )
             
             # Face Detector用のオプション設定
             base_options = python.BaseOptions(model_asset_path=str(model_path))
@@ -166,7 +158,12 @@ class EmotionDetectorAppMP:
         return {
             "face_detection": {
                 "model": "mediapipe",
-                "mediapipe": {"min_detection_confidence": 0.5, "model_selection": 0}
+                "mediapipe": {
+                    "model_path": "trained_models/mediapipe/blaze_face_short_range.tflite",
+                    "min_detection_confidence": 0.5,
+                    "model_selection": 0,
+                },
+                "tracking": {"enabled": True, "iou_threshold": 0.3, "max_missed_frames": 5},
             },
             "emotion_recognition": {
                 "model": "original",

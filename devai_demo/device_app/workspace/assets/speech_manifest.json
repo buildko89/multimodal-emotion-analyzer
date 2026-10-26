@@ -1,0 +1,72 @@
+{
+  "live_playback": false,
+  "board_verified": false,
+  "voice": "Microsoft Haruka Desktop",
+  "schema": "ara-pc-demo-tts-v1",
+  "culture": "ja-JP",
+  "records": [
+    {
+      "generated": false,
+      "reason": "empty_policy_text_no_audio",
+      "case": "wait"
+    },
+    {
+      "text": "必要な案内だけ表示します。",
+      "sha256": "ef72f2ab4fbd45966416390064b93c250199e42d5c8330aee98fe386c044f2b9",
+      "generated": true,
+      "path": "/root/devai_ara/ara_demo_20261026_v24/release/workspace/assets/minimal.wav",
+      "case": "minimal",
+      "source_sha256": "c70897f219811935238c67d296e80ceb6452aa67767a06b356b54a5f4097835e"
+    },
+    {
+      "generated": false,
+      "reason": "empty_policy_text_no_audio",
+      "case": "quiet"
+    },
+    {
+      "text": "休憩の際は、安全な場所に停車してから休みましょう。",
+      "sha256": "84d4afdf59cc72bc14fe89d1ffb8491d44a5a23646254524b0227621e8bc264a",
+      "generated": true,
+      "path": "/root/devai_ara/ara_demo_20261026_v24/release/workspace/assets/rest.wav",
+      "case": "rest",
+      "source_sha256": "08405fb1046d8e9c1955c0b3f70f2c93ff5680c970cae05671512d502a606768"
+    },
+    {
+      "text": "必要な案内だけ表示します。",
+      "sha256": "ef72f2ab4fbd45966416390064b93c250199e42d5c8330aee98fe386c044f2b9",
+      "generated": true,
+      "path": "/root/devai_ara/ara_demo_20261026_v24/release/workspace/assets/repeat.wav",
+      "case": "repeat",
+      "source_sha256": "c70897f219811935238c67d296e80ceb6452aa67767a06b356b54a5f4097835e"
+    },
+    {
+      "generated": false,
+      "reason": "empty_policy_text_no_audio",
+      "case": "clear"
+    }
+  ],
+  "listening_quality_reviewed": false,
+  "output_to_file_only": true,
+  "format": "PCM16_stereo_48000Hz",
+  "filter": "loudnorm=I=-10:TP=-1:LRA=7",
+  "device": "hw:CARD=mqsaudio,DEV=0",
+  "physical_audio_route_user_confirmed": true,
+  "volume_user_report": "pending_after_live_unintelligible",
+  "measurements": [
+    {
+      "file": "minimal.wav",
+      "peak": 0.890899658203125,
+      "rms": 0.18164825464588555
+    },
+    {
+      "file": "rest.wav",
+      "peak": 0.891204833984375,
+      "rms": 0.21997986689575885
+    },
+    {
+      "file": "repeat.wav",
+      "peak": 0.890899658203125,
+      "rms": 0.18164825464588555
+    }
+  ]
+}

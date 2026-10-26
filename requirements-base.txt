@@ -1,0 +1,10 @@
+# Tested design target: Python 3.12 on a development PC.
+opencv-contrib-python==4.11.0.86
+numpy>=1.26.0,<2.0.0
+pyyaml>=6.0.1,<7
+Pillow>=10.1.0
+
+# Default face detector and mini-XCEPTION emotion baseline.
+mediapipe==0.10.14
+protobuf==4.25.8
+tensorflow>=2.16.1,<2.18

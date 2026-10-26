@@ -1,0 +1,5 @@
+# Optional PC causal-capture and software-display verification environment.
+# Installed in the existing project .venv; board environments are unchanged.
+av==19.0.1
+psutil==7.2.2
+sounddevice==0.5.6

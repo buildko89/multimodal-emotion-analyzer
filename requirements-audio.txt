@@ -1,0 +1,5 @@
+# Install together with requirements-base.txt, or use requirements.txt.
+openai-whisper==20250625
+scipy>=1.11.0
+ffmpeg-python>=0.2.0
+

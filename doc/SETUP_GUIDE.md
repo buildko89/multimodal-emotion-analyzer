@@ -141,9 +141,25 @@ pip install onnxruntime-gpu
 pip install -r requirements.txt
 ```
 
-### 5. インストール確認
+### 5. モデル取得と検証
+
 ```bash
-python -c "import cv2, numpy, ultralytics, hsemotion; print('OK')"
+python scripts/manage_models.py download --profile default
+python scripts/manage_models.py check --profile default
+```
+
+音声認識を使う場合だけ、追加で次を実行します。
+
+```bash
+python scripts/manage_models.py download whisper-base
+python scripts/manage_models.py check whisper-base
+```
+
+モデルの取得元、ライセンス、入出力仕様は [MODELS.md](MODELS.md) を参照してください。通常の `yolov8n.pt` は顔検出モデルではないため使用しません。
+
+### 6. インストール確認
+```bash
+python -c "import cv2, numpy, mediapipe, tensorflow; print('OK')"
 # "OK" と表示されればインストール成功
 ```
 
@@ -223,18 +239,12 @@ pip install -r requirements.txt
 
 ---
 
-### YOLOv8モデルダウンロードエラー
+### モデルダウンロードエラー
 
-**症状**: モデルダウンロードが失敗する
+**症状**: `manage_models.py download` が失敗する
 
 **対処法**:
-1. 手動ダウンロード
-   ```bash
-   # Ultralyticsリポジトリから直接ダウンロード
-   # yolov8n.pt を custom/ ディレクトリに配置
-   ```
-
-2. プロキシ設定 (企業環境の場合)
+1. プロキシ設定 (企業環境の場合)
    ```bash
    export HTTP_PROXY=http://proxy.example.com:8080
    export HTTPS_PROXY=http://proxy.example.com:8080
@@ -271,7 +281,7 @@ sudo apt-get install -y libgl1-mesa-glx libglib2.0-0
 1. **軽量モデルに変更** (config.yaml)
    ```yaml
    face_detection:
-     model: "mediapipe"  # yolov8 → mediapipe
+     model: "mediapipe"  # 顔検出の既定値
    ```
 
 2. **フレームスキップ** (config.yaml)
@@ -352,7 +362,7 @@ python -c "import torch; print('CUDA:', torch.cuda.is_available())"
 #### 顔検出モデル変更
 ```yaml
 face_detection:
-  model: "yolov8"  # "mediapipe", "retinaface"
+  model: "mediapipe"  # "haarcascade", "retinaface"
 ```
 
 #### 表情認識モデル変更

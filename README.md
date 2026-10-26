@@ -1,17 +1,22 @@
 # multimodal-emotion-analyzer
-# マルチモーダル感情分析システム
+# マルチモーダル感情分析システム (ARA + i.MX95 実機展示デモ統合リポジトリ)
+
+> [!IMPORTANT]
+> **11月実機展示デモ（Kinara ARA-2 + NXP i.MX95）向けアセット集約:**  
+> 本リポジトリの [`devai_demo/`](devai_demo/) フォルダに、展示会向け自律常時稼働パイプライン、HDMI HUD 表示（Meiryoフォント・豆腐ゼロ）、Qwen2.5-7B 車載相棒対話、PC側運用スクリプト、当日運用手順書（Runbook）を一元集約しています。  
+> 詳細は [`devai_demo/README.md`](devai_demo/README.md) を参照してください。
 
 **表情認識 × 音声認識 による統合感情分析**
 
-OpenAI Whisper + MediaPipe を使用した、マルチモーダル（複数の入力形式）による高精度な感情・状態分析システムです。
+OpenAI Whisper + MediaPipe を使用した、表情分類結果と発話テキストの観測・比較用プロトタイプです。心理状態、虚偽、医療的ストレスを判定するものではありません。
 
 ## 概要
 
-このシステムは、以下の2つのモダリティ（入力形式）を統合して、人の感情や心理状態をより正確に把握します：
+このシステムは、以下の2つのモダリティ（入力形式）から得た観測結果を並べ、評価用ログを作成します：
 
 1. **表情認識** (MediaPipe + 深層学習モデル)
    - 7種類の感情を検出（怒り、嫌悪、恐怖、幸せ、悲しみ、驚き、中立）
-   - リアルタイム処理（30-60 FPS）
+   - 実効FPSはハードウェアと入力条件ごとに計測
 
 2. **音声認識** (OpenAI Whisper)
    - 発話内容のテキスト化
@@ -20,18 +25,18 @@ OpenAI Whisper + MediaPipe を使用した、マルチモーダル（複数の�
 
 3. **マルチモーダル統合分析**
    - 表情と発言内容の相関分析
-   - 矛盾検出（例：笑顔だがネガティブな発言）
-   - 総合的な感情・ストレス状態の評価
+   - 観測信号の不一致候補（例：happy分類とNEGATIVEテキスト極性）
+   - 表情分類とテキスト極性の不一致を示す試験的ルール
 
 ## 主な機能
 
 ### 🎭 表情認識
 - **7種類の表情分類**: Angry, Disgust, Fear, Happy, Sad, Surprise, Neutral
-- **高速処理**: CPU環境で30-60 FPS
+- **処理性能**: 使用機材と入力条件ごとに実測
 - **スムージング**: 時系列フィルタリングで安定した結果
 
-### 🎤 音声認識  
-- **高精度文字起こし**: Whisperによる多言語対応
+### 🎤 音声認識
+- **文字起こし**: Whisperによる多言語対応（用途・言語ごとの精度評価が必要）
 - **発話特徴分析**:
   - 発話速度（単語/秒）
   - 沈黙・ポーズの検出
@@ -46,19 +51,17 @@ OpenAI Whisper + MediaPipe を使用した、マルチモーダル（複数の�
   - 疑問文・繰り返しの検出
 
 ### 🔄 マルチモーダル統合
-- **矛盾検出**:
-  - 作り笑い（笑顔 × ネガティブ発言）
-  - 感情の抑制（怒り × 穏やかな発言）
-  - 虚偽（悲しい表情 × 「大丈夫」発言）
+- **観測信号の比較**:
+  - 表情分類とテキスト極性の組合せを観測
+  - 不一致候補を表示（内面、真偽、意図は推定しない）
 
-- **総合評価**:
-  - ストレススコア (0-100)
-  - ポジティブスコア (0-100)
-  - 信頼度スコア (0.0-1.0)
+- **試験的な統合出力**:
+  - schema v2: 表情分類、モデル出力確率、入力品質の測定状態、テキスト極性、不一致候補
+  - 未知ラベル・低確率・入力不足は判定不能。心理状態のスコアは出力しない
+  - [観測APIと移行手順](doc/OBSERVATION_SCHEMA.md)
 
-- **推奨アクション**:
-  - 状態に応じた具体的なアドバイス
-  - 休憩やサポートの提案
+- **用途境界**:
+  - 診断、虚偽判定、採用・査定、懲戒、安全上の自動介入には使用しない
 
 ## システム構成
 
@@ -89,7 +92,7 @@ multimodal-emotion-analyzer/
 ## インストール
 
 ### 1. 必要な環境
-- Python 3.8-3.12
+- 開発PC検証環境: Python 3.12
 - ffmpeg（音声処理用）
 
 ### 2. 依存パッケージのインストール
@@ -98,6 +101,24 @@ multimodal-emotion-analyzer/
 pip install -r requirements.txt
 ```
 
+### 3. モデルの導入（必須）
+
+モデルはリポジトリに同梱されず、実行時にも暗黙取得しません。映像用モデルを取得して整合性を検証します。
+
+```bash
+python scripts/manage_models.py download --profile default
+python scripts/manage_models.py check --profile default
+```
+
+音声を使う場合はWhisperも取得します。
+
+```bash
+python scripts/manage_models.py download whisper-base
+python scripts/manage_models.py check whisper-base
+```
+
+取得元、ライセンス、チェックサム、前処理、出力ラベル順は [doc/MODELS.md](doc/MODELS.md) を参照してください。
+
 主な依存パッケージ：
 - `openai-whisper`: 音声認識
 - `mediapipe`: 顔検出
@@ -105,7 +126,7 @@ pip install -r requirements.txt
 - `tensorflow/keras`: 表情認識
 - `numpy`, `scipy`: 数値計算
 
-### 3. ffmpegのインストール
+### 4. ffmpegのインストール
 
 **Windows (Chocolatey)**:
 ```bash
@@ -123,6 +144,9 @@ sudo apt update && sudo apt install ffmpeg
 ```
 
 ## 使い方
+
+単一人物制約・発話区間の同期と、Whisper不要の事前文字起こしによる検証は
+[TIMESTAMP_SYNC.md](doc/TIMESTAMP_SYNC.md) を参照してください。
 
 ### 基本的な使用方法
 
@@ -150,7 +174,21 @@ python multimodal_app.py --camera 1
 python multimodal_app.py --config my_config.yaml
 ```
 
-### コマンドラインオプション
+### PC基準実行の記録（ARA-01）
+
+録画＋実音声の実行では`speech_result.json`に実ASR結果、`video_summary.json`に媒体原点・フレーム数・終了状態・映像処理時間を保存します。設定の`output.save_frame_observations: true`を指定すると、`frame_observations.jsonl`へ全フレームの元PTS・frame index・推論時刻・全顔の生scoreを保存します。顔なし・複数顔も記録し、画面表示用に顔を絞る処理とは区別します。
+
+`media_aligned_monotonic_ns`は録画時にorigin＋媒体PTSを表します。`inference_started_ns`／`inference_completed_ns`は実処理のmonotonic時刻です。媒体時刻の一致、音声話者の対応、絶対口／音同期の確認を別に扱ってください。
+
+モデルスモークの過去結果を保持するには新しい出力先を指定します。
+
+```powershell
+python scripts/smoke_models.py --audio --pipeline --output-dir <new_output_directory>
+```
+
+このワークスペースでの基準実行・固定環境・再現手順は[ARA-01結果](../devai/devai_ara/ARA01_PC_BASELINE_RESULT.md)を参照してください。基準C0には画面内発話／画面外音声／手と口元／頷きのclassifier、SER・状態・LLM・応答はまだ接続されていません。
+
+### コマンドラインオプション一覧
 
 | オプション | 説明 | 例 |
 |-----------|------|-----|
@@ -191,7 +229,7 @@ result = analyzer.analyze_comprehensive(text)
 
 print(f"極性: {result['sentiment']['polarity']}")
 print(f"支配的感情: {result['sentiment']['dominant_emotion']}")
-print(f"状態: {result['overall_state']['state']}")
+print(f"方法: {result['method']}")
 ```
 
 ### マルチモーダル統合分析
@@ -207,10 +245,9 @@ result = analyzer.analyze(
     speech_data={"text": "今日は本当に嬉しいです！"}
 )
 
-print(f"総合状態: {result['overall_state']['state']}")
-print(f"ストレススコア: {result['overall_state']['stress_score']}")
-print(f"矛盾数: {len(result['contradictions'])}")
-print(f"信頼度: {result['trust_score']}")
+print(f"比較状態: {result['status']}")
+print(f"観測: {result['observations']}")
+print(f"不一致候補: {result['signal_mismatches']}")
 ```
 
 ## 設定
@@ -231,7 +268,7 @@ whisper:
 
 ```yaml
 face_detection:
-  model: "mediapipe"     # mediapipe, yolov8, haarcascade
+  model: "mediapipe"     # mediapipe, haarcascade, retinaface
   mediapipe:
     min_detection_confidence: 0.5
 ```
@@ -246,66 +283,30 @@ emotion_recognition:
     window_size: 6
 ```
 
-## 応用例
+## 評価用途と保存
 
-### 1. メンタルヘルスモニタリング
-- 長期的な感情変化の追跡
-- ストレスレベルの可視化
-- うつ傾向の早期発見
+同意を得た単一人物の録画を使い、顔追跡、表情分類、ASR、時刻同期、観測比較の動作を評価します。WhisperはASR、テキスト側は日本語キーワード規則であり、音響感情認識は未実装です。
 
-### 2. コミュニケーション分析
-- 会議の雰囲気測定
-- 話者のエンゲージメント評価
-- チームの心理的安全性の評価
-
-### 3. カスタマーサポート
-- 顧客満足度のリアルタイム測定
-- 不満の早期検出
-- 対応品質の改善
-
-### 4. 教育・学習支援
-- 学習者の理解度把握
-- 集中度モニタリング
-- 個別サポートの最適化
+`output.save_results: true` は表情分類CSVと、発話テキストを含むJSONLをPCへ保存します。取得前に利用目的・同意・保存期間・削除方法を対象者へ明示してください。自動削除機能はありません。保存を止める場合は `false` に変更し、既存データは保存先フォルダーの対象ファイルを削除します。
 
 ## 出力データ
 
-### 統合分析結果の構造
+観測APIは `schema_version: 2`。分類確率と入力品質、判定不能理由、不一致候補を返します。完全な構造と旧APIからの変更は [OBSERVATION_SCHEMA.md](doc/OBSERVATION_SCHEMA.md) を参照してください。
 
 ```python
 {
-    "timestamp": 1234567890.123,
-    "emotion_data": {
-        "emotion": "happy",
-        "confidence": 0.89,
-        "bbox": (x1, y1, x2, y2)
+    "schema_version": 2,
+    "status": "compared",
+    "observations": {
+        "face": {"face_emotion": "happy", "model_confidence": 0.89,
+                 "input_quality_status": "not_measured"},
+        "text_polarity": "NEGATIVE",
+        "text_method": "japanese_keyword_rules",
+        "acoustic_emotion": "not_implemented"
     },
-    "speech_data": {
-        "text": "今日は嬉しいです",
-        "language": "ja"
-    },
-    "text_sentiment": {
-        "polarity": "POSITIVE",
-        "score": 0.85,
-        "dominant_emotion": "joy"
-    },
-    "contradictions": [
-        {
-            "type": "fake_smile",
-            "severity": "medium",
-            "description": "笑顔だが、発言内容はネガティブ"
-        }
-    ],
-    "overall_state": {
-        "state": "良好",
-        "stress_score": 25.5,
-        "positive_score": 75.3,
-        "contradiction_count": 1
-    },
-    "trust_score": 0.85,
-    "recommendations": [
-        "良好な状態です。現状を維持しましょう"
-    ]
+    "uncertainty": [],
+    "signal_mismatches": [{"type": "facial_text_polarity_mismatch",
+                           "face_emotion": "happy", "text_polarity": "NEGATIVE"}]
 }
 ```
 
@@ -366,6 +367,12 @@ whisper:
 - [MediaPipeドキュメント](https://developers.google.com/mediapipe)
 - [マルチモーダル感情認識の研究論文](https://arxiv.org/abs/2212.04356)
 
+## ARA-02の録画観測統合（2026-10-11）
+
+元 `MultiModalEmotionApp` の録画＋実音声経路に、既存のFace／Hand Landmarker、SenseVoice／emotion2vecを別環境のworkerから接続した。Whisper基準とSenseVoice ASRを切替でき、同じ16kHz PCM・元PTS・人物対応不明・品質・根拠ファイルを共通envelopeへ保存する。既定設定では無効。
+
+[実装契約](../devai/devai_ara/OBSERVATION_ENVELOPE_V1.md)、[結果と未達](../devai/devai_ara/ARA02_OBSERVATION_INTEGRATION_RESULT.md)、[新runでの再実行](../devai/devai_ara/runs/ara02_observation_integration_20261011_v1/README.md)。元3動画720f・45回帰とASR切替を確認済み。4質問classifier・driver状態・LLM／短文応答・実時間capture・ARA移植は後続タスク。今回のworkerはcold起動で、実時間性能の達成値ではない。
+
 ## 今後の拡張
 
 - [ ] リアルタイムマイク入力対応
@@ -384,5 +391,5 @@ whisper:
 
 ---
 
-**開発**: マルチモーダル感情分析プロジェクト  
+**開発**: マルチモーダル感情分析プロジェクト
 **更新日**: 2026年1月8日

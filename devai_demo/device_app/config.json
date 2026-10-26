@@ -1,0 +1,271 @@
+{
+  "camera": {
+    "auto_exposure": true,
+    "device_id": 0,
+    "fps": 30,
+    "height": 480,
+    "width": 640
+  },
+  "cooperative_ai": {
+    "base_url": "http://127.0.0.1:18081",
+    "candidate_thresholds": {
+      "hand_mouth_risk_minimum_consecutive_frames": 3,
+      "head_event_maximum_seconds": 2.0,
+      "head_event_minimum_seconds": 0.3,
+      "head_pitch_excursion_degrees": 6,
+      "head_return_degrees": 2,
+      "maximum_frame_gap_seconds": 0.55,
+      "mouth_aperture_range": 0.02,
+      "mouth_minimum_samples": 5
+    },
+    "demo_response_only": true,
+    "enabled": true,
+    "guidance": "必要な案内だけ表示します。",
+    "model": "ara-qwen2.5-7b-r2.0.4",
+    "preferences": [
+      {
+        "automatic_from_asr": false,
+        "input_channel": "conversation_user_reply",
+        "preference": "minimal_guidance",
+        "source": "explicit_user",
+        "text": "必要最小限の案内にする"
+      }
+    ],
+    "timeout_seconds": 30,
+    "transport": "compact-cycle-v4",
+    "wait_for_backend_ready": true
+  },
+  "debug": {
+    "enabled": false,
+    "face_crops_dir": "debug/faces",
+    "save_face_crops": false,
+    "show_timing": false
+  },
+  "display": {
+    "bbox": {
+      "color_mode": "emotion",
+      "fixed_color": [
+        0,
+        255,
+        0
+      ],
+      "thickness": 2
+    },
+    "emotion_colors": {
+      "angry": [
+        0,
+        0,
+        255
+      ],
+      "contempt": [
+        128,
+        0,
+        128
+      ],
+      "disgust": [
+        0,
+        128,
+        0
+      ],
+      "fear": [
+        128,
+        128,
+        0
+      ],
+      "happy": [
+        0,
+        255,
+        255
+      ],
+      "neutral": [
+        128,
+        128,
+        128
+      ],
+      "sad": [
+        255,
+        0,
+        0
+      ],
+      "sadness": [
+        255,
+        255,
+        0
+      ],
+      "surprise": [
+        0,
+        128,
+        255
+      ]
+    },
+    "font": {
+      "color": [
+        255,
+        255,
+        255
+      ],
+      "scale": 0.6,
+      "thickness": 2
+    },
+    "fullscreen": false,
+    "show_bbox": true,
+    "show_confidence": true,
+    "show_fps": true,
+    "show_landmarks": false,
+    "show_window": true,
+    "window_title": "Emotion Detection"
+  },
+  "emotion_recognition": {
+    "deepface": {
+      "detector_backend": "skip",
+      "model_name": "Emotion"
+    },
+    "fer": {
+      "mtcnn": false
+    },
+    "hsemotion": {
+      "model_name": "enet_b0_8_best_afew"
+    },
+    "model": "original",
+    "original": {
+      "input_shape": [
+        64,
+        64
+      ],
+      "model_path": "trained_models/emotion_models/fer2013_mini_XCEPTION.102-0.66.hdf5"
+    },
+    "smoothing": {
+      "enabled": true,
+      "min_confidence": 0.3,
+      "window_size": 6
+    }
+  },
+  "face_detection": {
+    "haarcascade": {
+      "min_neighbors": 5,
+      "model_path": "trained_models/detection_models/haarcascade_frontalface_default.xml",
+      "scale_factor": 1.3
+    },
+    "mediapipe": {
+      "min_detection_confidence": 0.4,
+      "model_path": "trained_models/mediapipe/blaze_face_short_range.tflite",
+      "model_selection": 0
+    },
+    "model": "mediapipe",
+    "retinaface": {
+      "model": "retinaface",
+      "threshold": 0.5
+    },
+    "tracking": {
+      "enabled": true,
+      "iou_threshold": 0.3,
+      "max_missed_frames": 5
+    }
+  },
+  "input": {
+    "file_path": null,
+    "source": "camera"
+  },
+  "live": {
+    "ara_startup_warmup": false,
+    "camera": "/dev/v4l/by-id/usb-046d_0825_D9E9EBE0-video-index0",
+    "capture_only": false,
+    "diagnostic_replay": false,
+    "diagnostic_seconds": 120,
+    "duration_seconds": 600,
+    "enabled": true,
+    "explicit_interactions": true,
+    "font_path": "/root/devai_ara/ara_demo_20261026_v24/release/workspace/assets/meiryo.ttc",
+    "idle_capture_status": "実機デモ準備完了。準備回答後だけ8秒間、映像・音声を記録します。",
+    "interaction_scope": "actual",
+    "max_result_age_seconds": 600,
+    "maximum_processed_windows": 999999,
+    "microphone": "hw:CARD=U0x46d0x825,DEV=0",
+    "output": "SET_BY_SUPERVISOR",
+    "persistent_windows": true,
+    "preference_is_test_fixture": false,
+    "preparation_deadline_seconds": 420,
+    "record_on_request": false,
+    "sample_resources": true,
+    "sensor_capture": true,
+    "speech_output": {
+      "catalog": "/root/devai_ara/ara_demo_20261026_v24/release/workspace/assets/speech_manifest.json",
+      "device": "hw:CARD=mqsaudio,DEV=0"
+    },
+    "startup_preparation": {
+      "saved_inputs": {
+        "audio": {
+          "path": "/root/devai_ara/ara_demo_20261026_v24/release/workspace/saved_inputs/audio.wav",
+          "sha256": "2935c28dddc2e0a836ddde32c082d8cde036ef8f7f94b14253958ab771c0db37"
+        },
+        "video": {
+          "path": "/root/devai_ara/ara_demo_20261026_v24/release/workspace/saved_inputs/video.mp4",
+          "sha256": "fb9027d86287d7181fbecaeed82fc87d3c0f3880fd4ceabfdf05a506b3a83588"
+        }
+      }
+    },
+    "warmup_seconds": 12,
+    "window_max_queue_age_seconds": 8,
+    "window_seconds": 8,
+    "worker_deadline_seconds": 600,
+    "stop_after_success": false
+  },
+  "logging": {
+    "console_output": true,
+    "enabled": true,
+    "filename_format": "emotion_log_%Y%m%d_%H%M%S.log",
+    "level": "INFO",
+    "output_dir": "logs"
+  },
+  "observation_integration": {
+    "asr_backend": "sensevoice",
+    "audio_python": "/root/devai_ara/ara06_recording_app_20261014_v1/workspace/devai/driver_eval/runtime/sensevoice/.venv/bin/python",
+    "audio_torch_threads": 2,
+    "enabled": true,
+    "native_probe_backend": "pyav",
+    "overlap_main_video": true,
+    "parallel_backends": true,
+    "ser_backends": [
+      "sensevoice",
+      "emotion2vec"
+    ],
+    "visual_python": "/root/devai_ara/ara06_recording_app_20261014_v1/app_venv/bin/python",
+    "worker_mode": "online",
+    "worker_timeout_seconds": 300
+  },
+  "output": {
+    "output_dir": "output",
+    "save_csv": true,
+    "save_results": true,
+    "save_video": false,
+    "video_codec": "mp4v",
+    "video_fps": 30
+  },
+  "performance": {
+    "frame_skip": 0,
+    "num_threads": 0,
+    "resize": {
+      "enabled": false,
+      "height": 240,
+      "width": 320
+    },
+    "use_gpu": false
+  },
+  "synchronization": {
+    "audio_offset_seconds": 0.0
+  },
+  "whisper": {
+    "chunk_duration": 5.0,
+    "device": "cpu",
+    "language": "ja",
+    "model": "base",
+    "model_path": "trained_models/whisper/base.pt",
+    "task": "transcribe",
+    "word_timestamps": true
+  },
+  "startup_overlap": {
+    "enabled": true,
+    "policy": "delayed_loading_state_and_resource_guard_v2",
+    "minimum_delay_seconds": 0
+  }
+}

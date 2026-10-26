@@ -1,0 +1,18 @@
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+logs/
+output/
+debug/
+
+# Downloaded by scripts/manage_models.py. Model licensing and checksums are
+# recorded in models/model_manifest.json; binaries are intentionally not kept
+# in this source repository.
+trained_models/
+
+# Demo runtime execution logs and caches
+**/__pycache__/
+**/*.pyc
+**/runs/
+**/logs/

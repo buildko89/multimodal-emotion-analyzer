@@ -1,0 +1,334 @@
+{
+  "_id": "6684cc014099f9d44cd40dbd",
+  "id": "FunAudioLLM/SenseVoiceSmall",
+  "private": false,
+  "pipeline_tag": "automatic-speech-recognition",
+  "library_name": "funasr",
+  "tags": [
+    "funasr",
+    "speech-recognition",
+    "asr",
+    "emotion-recognition",
+    "audio-event-detection",
+    "multilingual",
+    "non-autoregressive",
+    "whisper-alternative",
+    "real-time",
+    "voice-ai",
+    "automatic-speech-recognition",
+    "zh",
+    "en",
+    "ja",
+    "ko",
+    "yue",
+    "license:other",
+    "region:us"
+  ],
+  "downloads": 17932,
+  "likes": 491,
+  "modelId": "FunAudioLLM/SenseVoiceSmall",
+  "author": "FunAudioLLM",
+  "sha": "3847d57b6bdf2dd8875cb1508d2af43d80a16bf7",
+  "lastModified": "2026-06-20T10:39:39.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "license": "other",
+    "license_name": "model-license",
+    "license_link": "https://github.com/modelscope/FunASR/blob/main/MODEL_LICENSE",
+    "language": [
+      "zh",
+      "en",
+      "ja",
+      "ko",
+      "yue",
+      "multilingual"
+    ],
+    "library_name": "funasr",
+    "pipeline_tag": "automatic-speech-recognition",
+    "tags": [
+      "speech-recognition",
+      "asr",
+      "emotion-recognition",
+      "audio-event-detection",
+      "multilingual",
+      "non-autoregressive",
+      "whisper-alternative",
+      "real-time",
+      "voice-ai"
+    ]
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "1ab759b35e8c85fde0b550ab0696a5818abd99c8",
+      "size": 1629
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "21ccb8d3bd78b977f6915ec907f866a217406c6a",
+      "size": 11952
+    },
+    {
+      "rfilename": "README_ja.md",
+      "blobId": "67a2c6032c5cd767b1a1d1fb6844e2efda93d660",
+      "size": 15200
+    },
+    {
+      "rfilename": "README_zh.md",
+      "blobId": "97475dec58ce34bba735d317d304ea8f7323f83c",
+      "size": 9603
+    },
+    {
+      "rfilename": "am.mvn",
+      "blobId": "681910cd1ab6458b61474cdbf0d1ac5e810f7b0d",
+      "size": 11203
+    },
+    {
+      "rfilename": "chn_jpn_yue_eng_ko_spectok.bpe.model",
+      "blobId": "72734d2b95d9bf34a2df2018846cf87edac3332d",
+      "size": 377341,
+      "lfs": {
+        "sha256": "aa87f86064c3730d799ddf7af3c04659151102cba548bce325cf06ba4da4e6a8",
+        "size": 377341,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "config.yaml",
+      "blobId": "26bb9d3d20a09ff389c1ddb24865771d2312fc0f",
+      "size": 1855
+    },
+    {
+      "rfilename": "configuration.json",
+      "blobId": "264d8171d2d6bfebf3c48d04bd325b34d9be1d9a",
+      "size": 396
+    },
+    {
+      "rfilename": "demo.py",
+      "blobId": "f18e7820c8f07ef8fe7a8174dfcb48ed948a6fa0",
+      "size": 612
+    },
+    {
+      "rfilename": "example/en.mp3",
+      "blobId": "325005e60db535f24f5b3d9504b209704031bdb4",
+      "size": 57441
+    },
+    {
+      "rfilename": "example/ja.mp3",
+      "blobId": "b3056dd92c8a0210eb8f786662a4528e31b44942",
+      "size": 57837
+    },
+    {
+      "rfilename": "example/ko.mp3",
+      "blobId": "3e67ab481230742d41e27adb63f5091cec39a7db",
+      "size": 27909
+    },
+    {
+      "rfilename": "example/yue.mp3",
+      "blobId": "a67e8f862132e61d867854dd5e6e4d28af57b55a",
+      "size": 31246
+    },
+    {
+      "rfilename": "example/zh.mp3",
+      "blobId": "1ae2c89b29112ee5e23bcebc353ea6687c38e6bd",
+      "size": 44973
+    },
+    {
+      "rfilename": "image/aed_figure.png",
+      "blobId": "995cedf3b10abc5e72f66fef2691aca5e34fceb7",
+      "size": 118715
+    },
+    {
+      "rfilename": "image/asr_results.png",
+      "blobId": "d962606e9372f12a33b565ace33a0f883fa119d0",
+      "size": 243908
+    },
+    {
+      "rfilename": "image/asr_results1.png",
+      "blobId": "402581e178bb79b0102a6aa69a0630b17eacd96b",
+      "size": 81915
+    },
+    {
+      "rfilename": "image/asr_results2.png",
+      "blobId": "46457038c351d3bad666bc19551f1f6a390d7257",
+      "size": 75320
+    },
+    {
+      "rfilename": "image/dingding_funasr.png",
+      "blobId": "f8ba2997949c63126d6102faf30937f12878d592",
+      "size": 108856
+    },
+    {
+      "rfilename": "image/dingding_sv.png",
+      "blobId": "8ea012c9c0b91a4ec912a211c364c9eb214d77a0",
+      "size": 116998
+    },
+    {
+      "rfilename": "image/inference.png",
+      "blobId": "0af61743051a46f6e1c8482ca971a1eb4682c24c",
+      "size": 957677
+    },
+    {
+      "rfilename": "image/sensevoice.png",
+      "blobId": "8b8786b7594517338233ae9c6942c1d74c8f8833",
+      "size": 900892
+    },
+    {
+      "rfilename": "image/sensevoice2.png",
+      "blobId": "db7780ed1f0415d81fd5c647c072006d87d976a3",
+      "size": 2084127,
+      "lfs": {
+        "sha256": "823bed518e6f9856088584829cbb98a110cac4f926e818a45238e782a1d813bb",
+        "size": 2084127,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "image/ser_figure.png",
+      "blobId": "e3348900a2cfb5e9986fa526b5f1c0cac73a0226",
+      "size": 198915
+    },
+    {
+      "rfilename": "image/ser_table.png",
+      "blobId": "da432dfc349b927c9e8af20e4083f90d39332786",
+      "size": 325753
+    },
+    {
+      "rfilename": "image/webui.png",
+      "blobId": "91bc2067254e0c1f0242e8edf91cea2df574a7df",
+      "size": 1635216,
+      "lfs": {
+        "sha256": "3a0311b75d12f92ee8a6abb4f99d3f00363e5576293a7958f16c9f0b970488bb",
+        "size": 1635216,
+        "pointerSize": 132
+      }
+    },
+    {
+      "rfilename": "image/wechat.png",
+      "blobId": "9534d7ea402f5a713e62103b9635512a7e874ff6",
+      "size": 191225
+    },
+    {
+      "rfilename": "model.pt",
+      "blobId": "504783eeb5c68405034d837e954fc733d6677eba",
+      "size": 936291369,
+      "lfs": {
+        "sha256": "833ca2dcfdf8ec91bd4f31cfac36d6124e0c459074d5e909aec9cabe6204a3ea",
+        "size": 936291369,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "requirements.txt",
+      "blobId": "e820ebedd088f8aded6e56810fdb61fcb8038baa",
+      "size": 96
+    }
+  ],
+  "spaces": [
+    "openbmb/VoxCPM-Demo",
+    "tardellirs/model-pulse",
+    "FunAudioLLM/SenseVoice",
+    "FunAudioLLM/Fun-ASR-Nano",
+    "shenyunhang/VITA-Audio",
+    "EdisonBlack/VoxCPM-Demo",
+    "WariHima/voxcpm-1.5-ja-jp",
+    "cuio/SenseVoice",
+    "Birkhoff-Archive/SenseVoice",
+    "kemuriririn/CosyVoice2-0.5B",
+    "Birkhoff-Archive/test-FunAudioLLM",
+    "adeelahmad/Acoustic-Intelligence",
+    "FunAudioLLM/Fun-ASR-Nano-GPU-Debug",
+    "xost6377/VoxCPM-Demo-cpu",
+    "voicenova/voicenovaai",
+    "wagep1234/hamody_vox",
+    "terryli/cantonese-call-transcriber",
+    "Nocigar/siliconflow",
+    "tuan243/checkSound",
+    "dw2026/VITA-Audio",
+    "essen/SenseVoice",
+    "Choultion-Rudas/SenseVoice",
+    "FFomy/try_gradio",
+    "MihaiPopa-1/CosyVoice2-0.5B",
+    "Sataz/VoxCPM-Demo",
+    "jacki1e/VoxCPM-Demo",
+    "notuser77/SenseVoice",
+    "cytopa99/universal-fast-dubbing",
+    "MihaiPopa-1/VoxCPM-Demo-2",
+    "MihaiPopa-1/VoxCPM-Demo",
+    "bingoood/Fun-ASR-Nano",
+    "macpop/VoxCPM-Demo",
+    "sreesaiarjun/VoxCPM-Demo",
+    "litagin/CosyVoice2-0.5B",
+    "aditaaa/VoxCPM-Demo",
+    "actionlw/openclaw",
+    "eubottura/deepsite-project-1hmn1",
+    "ksrgszk/Fun-ASR-Nano",
+    "fdbw/zd",
+    "stavanyeng/ge",
+    "dsa2dsads/VoiceDirector",
+    "hongqminh/VoxCPM-Demo",
+    "VX3/VoxCPM-Demo",
+    "developerjeremylive/VoxCPM-Demo-etheroi",
+    "karikatura13/my-voxcpm2-voice",
+    "feeday/Fun-ASR-Nano",
+    "joe951202/VoxCPM-Demo",
+    "Mumuiop/VoxCPM-Demo",
+    "AnonUser0101/VoxCPM-Demo",
+    "voicenova/VoiceNova",
+    "EzzaSaeed/Voicedistressdetection",
+    "wagep1234/HamoMinecraft-VoxCPM",
+    "yunmobaihan/VoxCPM-Demo",
+    "Heng6889/VoxCPM-Demo",
+    "Reancomputer/VoxCPM-Demo",
+    "eugenee00/VoxCPM-Demo",
+    "Ali2972/VoxCPM-Demo",
+    "nousher99/VoxCPM-Demo",
+    "nokey008/VoxCPM-Demo",
+    "justinbackes/VoxCPM-Demo",
+    "smartbizai/VoxCPM-Demo",
+    "ayenbonsoa/VoxCPM-Demo",
+    "ashikashik59/647647457VoxCPM-Demo",
+    "valentinapretty7/VoxCPM-Demo",
+    "vatt1213/VoxCPM-Demo",
+    "Kiro127ui/VoxCPM-Demo",
+    "ustarry/VoxCPM-Demo",
+    "lk080424/swarm-backend",
+    "Tgudj/my-voice-clone-final",
+    "Liratanak/VoxCPM-ZeroGPU",
+    "Chanthou/VoxCPM-Demo",
+    "Saifma/VoxCPM-saif.ma",
+    "Maycsz/video-transcribe-mcp",
+    "Sokang/VoxCPM-Demo-ANG",
+    "kopouk/VoxCPM-Demo",
+    "deeplove2121/VoxCPM-Demo",
+    "Tha456/VoxCPM-TTS",
+    "ggccnu/VoxCPM-Demo",
+    "ixingchen/VoxCPM-Demo",
+    "reaksmeydev/VoxCPM-Demo",
+    "romeio/VoxCPM-Demo",
+    "lineee/VoxCPM-Demo",
+    "yellow60852/LinuxTypeless-ASR",
+    "funasr/demo",
+    "Luciano04/hauxu-dream",
+    "powercz/xiaozhi",
+    "gpt0403/VoxCPM-Demo",
+    "Myanaung/Alinnthit",
+    "Myanaung/VoxCPM-Demo",
+    "BREE43W/VoxCPM-Demo",
+    "kobadam/VoxCPM-Demo19",
+    "yhyahjb/VoxCPM-Demo",
+    "DaraPNG/VoxCPM-Demo",
+    "lukris/voxCPM2",
+    "kkikisty/VoxCPM-Demo",
+    "aung7090/VoxCPM-Demo",
+    "xx4432/VoxCPM-Demo",
+    "cstorm125/Fun-ASR-Nano",
+    "sanaye/VoxCPM-Demo",
+    "onyxokachix/xCAPINF"
+  ],
+  "createdAt": "2024-07-03T03:56:49.000Z",
+  "usedStorage": 940388053
+}

@@ -1,0 +1,26 @@
+[Unit]
+Description=Kinara ARA-2 LLM Resident Service (Qwen2.5-7B)
+After=network.target rt-sdk-ara2.service
+Wants=rt-sdk-ara2.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/root/devai_ara/services/ara_llm
+Environment=HF_HUB_OFFLINE=1
+Environment=TRANSFORMERS_OFFLINE=1
+Environment=OMP_NUM_THREADS=2
+Environment=OPENBLAS_NUM_THREADS=2
+Environment=MKL_NUM_THREADS=2
+Environment=NUMEXPR_NUM_THREADS=2
+Environment=TF_CPP_MIN_LOG_LEVEL=1
+Environment=PYTHONPATH=/root/devai_ara/services/ara_llm
+ExecStart=/root/devai_ara/ara06_minimal_llm_20261013_v1/venv/bin/python -B -u -m modules.ara_llm_service --port 18081 --audit /root/devai_ara/services/ara_llm/ara_audit.jsonl --prompt-format compact-json-v1
+Restart=on-failure
+RestartSec=5
+KillMode=control-group
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,77 @@
+{
+  "acquired_at_utc": "2026-10-04T12:28:48.402539+00:00",
+  "scope": "local PC research",
+  "files": [
+    {
+      "model": "MediaPipe Face Landmarker",
+      "version": "1",
+      "path": "runtime\\face_landmarker\\model\\face_landmarker.task",
+      "source": "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task",
+      "sha256": "64184e229b263107bc2b804c6625db1341ff2bb731874b0bcc2fe6544e0bc9ff",
+      "size": 3758596,
+      "submodels": [
+        {
+          "name": "face_detector.tflite",
+          "size": 229746,
+          "sha256": "b4578f35940bf5a1a655214a1cce5cab13eba73c1297cd78e1a04c2380b0152f"
+        },
+        {
+          "name": "face_landmarks_detector.tflite",
+          "size": 2553590,
+          "sha256": "c7d54204ce0448474c7f3fa9af494787c0965cbdd6f20fc72867e43046bd43d5"
+        },
+        {
+          "name": "geometry_pipeline_metadata_landmarks.binarypb",
+          "size": 19376,
+          "sha256": "bdbcda96dfcb7da883da124aaa2c55dee49770d934f0fcc71747f8c21bdc75b4"
+        },
+        {
+          "name": "face_blendshapes.tflite",
+          "size": 955312,
+          "sha256": "4f36dded049db18d76048567439b2a7f58f1daabc00d78bfe8f3ad396a2d2082"
+        }
+      ]
+    },
+    {
+      "model": "emotion2vec_plus_base",
+      "revision": "b318240bfe67db81a8c572ecb37ce9c3759b81c9",
+      "source": "https://huggingface.co/emotion2vec/emotion2vec_plus_base/resolve/b318240bfe67db81a8c572ecb37ce9c3759b81c9/model.pt",
+      "path": "runtime\\emotion2vec\\model\\model.pt",
+      "size": 1118245678,
+      "sha256": "60710b5aae1dbe69bdac8920028fb05882d4314fd09031922b4b61ee9e7aadbd"
+    },
+    {
+      "model": "emotion2vec_plus_base",
+      "revision": "b318240bfe67db81a8c572ecb37ce9c3759b81c9",
+      "source": "https://huggingface.co/emotion2vec/emotion2vec_plus_base/resolve/b318240bfe67db81a8c572ecb37ce9c3759b81c9/config.yaml",
+      "path": "runtime\\emotion2vec\\model\\config.yaml",
+      "size": 3170,
+      "sha256": "50674ec187406b4f1208925594ceaf1f28f16a22333b5f2ac5b3d0cbffdd670e"
+    },
+    {
+      "model": "emotion2vec_plus_base",
+      "revision": "b318240bfe67db81a8c572ecb37ce9c3759b81c9",
+      "source": "https://huggingface.co/emotion2vec/emotion2vec_plus_base/resolve/b318240bfe67db81a8c572ecb37ce9c3759b81c9/configuration.json",
+      "path": "runtime\\emotion2vec\\model\\configuration.json",
+      "size": 343,
+      "sha256": "8b6a745213025c7d4565f9f074cfef1b5cd5ef76e38e2a8f7f8a3db271e735b2"
+    },
+    {
+      "model": "emotion2vec_plus_base",
+      "revision": "b318240bfe67db81a8c572ecb37ce9c3759b81c9",
+      "source": "https://huggingface.co/emotion2vec/emotion2vec_plus_base/resolve/b318240bfe67db81a8c572ecb37ce9c3759b81c9/tokens.txt",
+      "path": "runtime\\emotion2vec\\model\\tokens.txt",
+      "size": 119,
+      "sha256": "866121e470057b847d7a50e9923509141fb2924392f53385a186482a1ec0fb7f"
+    },
+    {
+      "model": "emotion2vec_plus_base",
+      "revision": "b318240bfe67db81a8c572ecb37ce9c3759b81c9",
+      "source": "https://huggingface.co/emotion2vec/emotion2vec_plus_base/resolve/b318240bfe67db81a8c572ecb37ce9c3759b81c9/README.md",
+      "path": "runtime\\emotion2vec\\model\\README.md",
+      "size": 5749,
+      "sha256": "b65c0bfa01bd991e255fa1ae7203c345f907d68eab90b1bf3482367d808e8274"
+    }
+  ],
+  "remote_code_downloaded": false
+}
