@@ -183,6 +183,7 @@
     "microphone": "hw:CARD=U0x46d0x825,DEV=0",
     "output": "SET_BY_SUPERVISOR",
     "persistent_windows": true,
+    "post_ready_start_gate": true,
     "preference_is_test_fixture": false,
     "preparation_deadline_seconds": 420,
     "record_on_request": false,

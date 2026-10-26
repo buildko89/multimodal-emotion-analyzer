@@ -58,8 +58,17 @@ python -u ara_demo_continuous_operator.py start --release ara_demo_20261026_v25 
 ```
 ※ `YYYYMMDD_HHMMSS` は実行日時に置き換えてください（例: `demo_continuous_20261115_100000_run01`）。
 
+実機画面とstatusがreadyになっても、認識窓はまだ開始されません。操作者が本人へ
+「今から話せる」ことを再確認し、その回答を受けた直後に次を実行します。
+
+```powershell
+python -u ara_demo_continuous_operator.py arm --release ara_demo_20261026_v25 --session demo_continuous_YYYYMMDD_HHMMSS_run01 --reply "今から話せます"
+```
+
+`post_ready_capture_armed: true`を確認してから、本人へ発話開始を案内します。
+
 ### 起動後の自動挙動:
-1. 実機 HDMI 画面にリアルタイムカメラ映像および HUD（感情メーター、アバターバッジ）が表示されます。
+1. 実機 HDMI 画面にリアルタイムカメラ映像および HUD（感情メーター、アバターバッジ）が表示されます。ready後の`arm`までは認識窓を保存しません。
 2. 8秒ごとに自動で窓が切り出され、表情認識・頭部姿勢・ASR・Qwen2.5-7B推論が自律回転します。
 3. 来場者が話しかけると、画面下部に ASR 認識テキスト（字幕）が表示されます。
 4. Qwen2.5-7B が表情と発話に応じた親しみやすい対話応答を生成し、画面下部のメッセージカードに表示されます。

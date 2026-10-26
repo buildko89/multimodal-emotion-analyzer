@@ -121,6 +121,17 @@ print(json.dumps(api['execute']('start',{self.session!r},False,False)))
         save(self.case / 'start_receipt.json', value)
         print("Continuous session started successfully:", json.dumps(value, ensure_ascii=False, indent=2))
 
+    def arm(self, reply):
+        self.require_case()
+        save(self.case / 'post_ready_user_readiness.json', dict(
+            session=self.session, reply=reply, received_utc=datetime.now(timezone.utc).isoformat(),
+            confirmation_phase='after_device_ready'
+        ))
+        value = self.remote_call(
+            f"print(json.dumps(api['execute']('arm',{self.session!r},False,True)))\n", 'arm')
+        save(self.case / 'arm_receipt.json', value)
+        print("Continuous capture armed:", json.dumps(value, ensure_ascii=False, indent=2))
+
     def status(self):
         self.require_case()
         code = f'''out=api['execute']('status',{self.session!r})
@@ -206,19 +217,19 @@ if __name__ == '__main__':
     sys.stdout.reconfigure(encoding='utf-8')
     sys.stderr.reconfigure(encoding='utf-8')
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('action', choices=['preflight', 'start', 'status', 'screenshot', 'stop', 'collect'])
+    parser.add_argument('action', choices=['preflight', 'start', 'arm', 'status', 'screenshot', 'stop', 'collect'])
     parser.add_argument('--release', default='ara_demo_20261026_v25')
     parser.add_argument('--session', required=True)
     parser.add_argument('--reply', help='User explicit readiness confirmation reply')
     parser.add_argument('--label', default='current', help='Label for screenshot')
     args = parser.parse_args()
 
-    if args.action == 'start' and not (args.reply and args.reply.strip()):
+    if args.action in ('start', 'arm') and not (args.reply and args.reply.strip()):
         parser.error('A fresh actual user readiness reply is required in --reply')
 
     operator = ContinuousOperator(args.release, args.session)
-    if args.action == 'start':
-        operator.start(args.reply)
+    if args.action in ('start', 'arm'):
+        getattr(operator, args.action)(args.reply)
     elif args.action == 'screenshot':
         operator.screenshot(args.label)
     else:

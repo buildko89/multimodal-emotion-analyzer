@@ -81,6 +81,9 @@ python -u ara_demo_continuous_operator.py preflight --release ara_demo_20261026_
 # 3. 自律常時稼働デモの開始 (来場者を迎える)
 python -u ara_demo_continuous_operator.py start --release ara_demo_20261026_v25 --session demo_continuous_YYYYMMDD_HHMMSS_run01 --reply "現在、カメラ・マイク入力の準備ができています"
 
+# 実機がreadyになった後、本人へ現在の発話準備を再確認してから連続取得を許可
+python -u ara_demo_continuous_operator.py arm --release ara_demo_20261026_v25 --session demo_continuous_YYYYMMDD_HHMMSS_run01 --reply "今から話せます"
+
 # 4. 現在の画面スクリーンショット取得 (確認用)
 python -u ara_demo_continuous_operator.py screenshot --release ara_demo_20261026_v25 --session demo_continuous_YYYYMMDD_HHMMSS_run01
 

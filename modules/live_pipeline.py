@@ -180,13 +180,16 @@ def run_live(configuration):
     stop = threading.Event()
     inference_stop = threading.Event()
     preparation_ready = threading.Event()
+    post_ready_capture = threading.Event()
     owned_runtime = {}
     if not preparation: preparation_ready.set()
+    if not live.get('post_ready_start_gate', False): post_ready_capture.set()
     queue = LatestWindowQueue()
     ring = TimedPCM(retain_seconds=max(30, live.get('window_seconds', 3)+10))
     shared = {'status': 'カメラ・マイクを起動中', 'camera_frames': 0, 'audio_samples': 0,
               'audio_rms': 0, 'max_result_age_seconds': live.get('max_result_age_seconds', 300),
-              'sensor_capture_enabled':live.get('sensor_capture', True)}
+              'sensor_capture_enabled':live.get('sensor_capture', True),
+              'post_ready_capture_armed':post_ready_capture.is_set()}
     capture_camera,microphone_type=camera_frames,NativeMicrophone
     if live.get('capture_backend')=='windows':
         from modules.pc_live import windows_camera_frames,WindowsMicrophone
@@ -260,6 +263,24 @@ def run_live(configuration):
             if not preparation_ready.is_set():
                 frames = []
                 continue
+            if not post_ready_capture.is_set():
+                command_path = output/'continuous_start_command.json'
+                if not command_path.exists():
+                    with lock: shared['status'] = '準備完了。現在の発話準備確認を待っています'
+                    frames = []
+                    continue
+                command = json.loads(command_path.read_text(encoding='utf-8'))
+                authorized_ns = command.get('authorized_ns')
+                if (command.get('explicit_user_ready') is not True or not isinstance(authorized_ns, int)
+                        or authorized_ns > time.monotonic_ns()):
+                    raise ValueError('invalid_post_ready_start_command')
+                post_ready_capture.set()
+                with lock:
+                    shared['post_ready_capture_armed'] = True
+                    shared['status'] = '実入力の連続取得を開始しました'
+                emit({'event':'post_ready_capture_armed','authorized_ns':authorized_ns,
+                      'request_id':command.get('request_id')})
+                frames = []
             if gate is not None:
                 command = output/'capture_command.json'
                 if command.exists() and gate.pending is None:

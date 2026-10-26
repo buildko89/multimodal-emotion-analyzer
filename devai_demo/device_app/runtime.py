@@ -300,12 +300,26 @@ def execute(action,session=None,check=False,user_ready=False):
         with receipt.open('x') as stream:json.dump(dict(session=active['session'],explicit_user_ready=True,command=command),stream)
         write(folder/'live/capture_command.json',command)
         return dict(recording_seconds=8,command=command)
+    if action=='arm':
+        assert user_ready,'--user-ready must follow a current explicit post-ready confirmation'
+        assert not state['check_only'] and state['stage']=='ready','Live session must be ready'
+        owned=read(folder/'pipeline_identity.json');assert matches(owned),'Pipeline identity mismatch'
+        prep=read(folder/'live/preparation_state.json');assert prep.get('ready') and prep['state']=='ready'
+        command_path=folder/'live/continuous_start_command.json'
+        assert not command_path.exists(),'Continuous capture already armed'
+        command=dict(request_id='continuous_post_ready_01',authorized_ns=time.monotonic_ns(),
+                     explicit_user_ready=True,
+                     operator_contract='current_confirmation_after_device_ready')
+        write(folder/'post_ready_operator_confirmation.json',command)
+        write(command_path,command)
+        write(folder/'state.json',{**state,'recording_requested':True,'post_ready_capture_armed':True})
+        return dict(session=active['session'],continuous_capture_armed=True,command=command)
     return dict(session=active['session'],state=state,health=health(),
                 preparation=read(folder/'live/preparation_state.json') if (folder/'live/preparation_state.json').exists() else None,
                 end=read(folder/'end_proof.json') if (folder/'end_proof.json').exists() else None)
 
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('action',choices=['doctor','start','status','stop','record','supervise'])
+    p=argparse.ArgumentParser();p.add_argument('action',choices=['doctor','start','status','stop','record','arm','supervise'])
     p.add_argument('--session');p.add_argument('--check',action='store_true');p.add_argument('--user-ready',action='store_true')
     a=p.parse_args()
     if a.action=='supervise':supervise(STATE/a.session,a.check)
