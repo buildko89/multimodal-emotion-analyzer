@@ -7,6 +7,7 @@ from pathlib import Path
 import shutil
 import subprocess
 import sys
+import tempfile
 import re
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from ara06_service_control import ROOT,HOST,OPTIONS
@@ -134,18 +135,40 @@ def build_from_release(source_name):
     package=RUN/'release';package.parent.mkdir(parents=True,exist_ok=True)
     shutil.copytree(source,package)
     old_prefix='/root/devai_ara/'+source_name+'/release'
-    config=remap_release(json.loads((source/'config.json').read_text(encoding='utf-8')),old_prefix,RELEASE)
-    catalog=remap_release(json.loads((source/'workspace/assets/speech_manifest.json').read_text(encoding='utf-8')),old_prefix,RELEASE)
+    # devai_demo/device_app is the V25 source of truth.  Overlay it on the
+    # verified release so dependencies and immutable assets remain pinned.
+    device_app=Path(__file__).resolve().parents[1]/'device_app'
+    shutil.copytree(device_app,package,dirs_exist_ok=True,
+                    ignore=shutil.ignore_patterns('__pycache__','*.pyc'))
+    for cache in package.rglob('__pycache__'):
+        shutil.rmtree(cache)
+    for bytecode in package.rglob('*.pyc'):
+        bytecode.unlink()
+    run_state = package/'workspace/runs'
+    if run_state.exists():
+        shutil.rmtree(run_state)
+    run_state.mkdir()
+    config=remap_release(json.loads((package/'config.json').read_text(encoding='utf-8')),old_prefix,RELEASE)
+    # The centralized source may already point at another reviewed release.
+    def remap_any_demo_release(value):
+        if isinstance(value,dict):return {k:remap_any_demo_release(v) for k,v in value.items()}
+        if isinstance(value,list):return [remap_any_demo_release(v) for v in value]
+        if isinstance(value,str):
+            return re.sub(r'^/root/devai_ara/ara_demo_[0-9]{8}_v[1-9][0-9]*/release',RELEASE,value)
+        return value
+    config=remap_any_demo_release(config)
+    catalog=remap_any_demo_release(json.loads((package/'workspace/assets/speech_manifest.json').read_text(encoding='utf-8')))
     for target,value in ((package/'config.json',config),(package/'workspace/assets/speech_manifest.json',catalog)):
         target.write_text(json.dumps(value,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
-    shutil.copy2(Path(__file__).with_name('ara_demo_runtime.py'),package/'runtime.py')
+    shutil.copy2(device_app/'runtime.py',package/'runtime.py')
     shutil.copy2(Path(__file__).with_name('ara_audio_devices.py'),package/'audio_devices.py')
     from ara_audio_devices import requirements
     numeric={'/dev/snd/pcmC2D0p','/dev/snd/pcmC3D0c'}
     candidate={**manifest,'release':NAME,'parent_release':source_name,
         'dependencies':[p for p in manifest['dependencies'] if p not in numeric],
         'audio_devices':requirements(config),
-        'configuration_changes':['release_paths','named_alsa_pcm_requirements'],
+        'configuration_changes':['v25_centralized_device_app','bounded_worker_pool',
+                                 '24_hour_runtime','visual_stride_4','release_paths'],
         'files':{p.relative_to(package).as_posix():hashlib.sha256(p.read_bytes()).hexdigest()
                  for p in package.rglob('*') if p.is_file() and p!=package/'manifest.json'}}
     (package/'manifest.json').write_text(json.dumps(candidate,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
@@ -154,19 +177,55 @@ def build_from_release(source_name):
 
 def deploy():
     package=RUN/'release';assert package.is_dir(),'Run build first'
+    manifest=json.loads((package/'manifest.json').read_text(encoding='utf-8'))
+    parent=manifest.get('parent_release')
+    if not parent:raise ValueError('Hardlink deployment requires a parent_release')
+    parent_local=ROOT/'devai/devai_ara/runs'/parent/'release'
+    parent_manifest=json.loads((parent_local/'manifest.json').read_text(encoding='utf-8'))
+    changed=[]
+    for path in package.rglob('*'):
+        if path.is_file():
+            relative=path.relative_to(package).as_posix()
+            digest=hashlib.sha256(path.read_bytes()).hexdigest()
+            if parent_manifest['files'].get(relative)!=digest:changed.append(relative)
+    removed=sorted(set(parent_manifest['files'])-set(manifest['files']))
+    delta_bytes=sum((package/name).stat().st_size for name in changed)
+    staging=REMOTE+'.deploy_staging'
+    base='/root/devai_ara/'+parent+'/release'
     ssh(f'''from pathlib import Path
-import shutil
-p=Path({REMOTE!r});assert shutil.disk_usage('/').free>={deploy_required_bytes(package)},'Insufficient space for payload plus start/copy reserve'
-p.mkdir(exist_ok=False)
+import json,os,shutil
+target=Path({RELEASE!r});stage=Path({staging!r});base=Path({base!r})
+assert base.is_dir() and not stage.exists()
+assert shutil.disk_usage('/').free>=192*2**20+{delta_bytes}+8*2**20,'Insufficient space for hardlink delta deployment'
+if target.exists():
+ deployed=json.loads((target/'manifest.json').read_text())
+ assert deployed['release']=={NAME!r},'Existing target is not the fixed V25 release'
+else:
+ target.parent.mkdir(exist_ok=False)
+ shutil.copytree(base,target,copy_function=os.link,symlinks=True)
 ''','deploy_prepare')
-    subprocess.run(['scp',*OPTIONS,'-r',str(package),f'{HOST}:{RELEASE}'],check=True,timeout=90)
+    with tempfile.TemporaryDirectory(dir=RUN,prefix='deploy_delta_') as temporary:
+        delta=Path(temporary)
+        for name in changed:
+            target=delta/name;target.parent.mkdir(parents=True,exist_ok=True)
+            shutil.copy2(package/name,target)
+        subprocess.run(['scp',*OPTIONS,'-r',str(delta),f'{HOST}:{staging}'],check=True,timeout=90)
     result=ssh(f'''from pathlib import Path
-import runpy,json
+import os,runpy,json,shutil
+stage=Path({staging!r});target=Path({RELEASE!r})
+for source in stage.rglob('*'):
+ if source.is_file():
+  relative=source.relative_to(stage);destination=target/relative
+  destination.parent.mkdir(parents=True,exist_ok=True)
+  os.replace(source,destination)
+for relative in {removed!r}:
+ destination=target/relative
+ if destination.is_file() or destination.is_symlink():destination.unlink()
+shutil.rmtree(stage)
 root=Path({RELEASE!r})/'workspace'
-(root/'multimodal-emotion-analyzer/trained_models').symlink_to({OLD!r}+'/multimodal-emotion-analyzer/trained_models',target_is_directory=True)
-(root/'devai/driver_eval/runtime').symlink_to({OLD!r}+'/devai/driver_eval/runtime',target_is_directory=True)
 ns=runpy.run_path({RELEASE!r}+'/runtime.py')
 result=ns['doctor']();assert result['ok'],result
+result['hardlink_parent']={base!r};result['delta_files']={len(changed)};result['removed_files']={len(removed)};result['delta_bytes']={delta_bytes}
 print(json.dumps(result))
 ''','deploy_verify')
     print(result['stdout'])

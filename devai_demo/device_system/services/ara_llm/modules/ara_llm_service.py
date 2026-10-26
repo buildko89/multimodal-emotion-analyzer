@@ -437,10 +437,13 @@ def main():
             if hasattr(runtime.backend, 'load_metrics'):
                 audit_entry.update(runtime.backend.load_metrics)
             runtime.audit(audit_entry)
-        except Exception as error:
+        except BaseException as error:
             runtime.state = 'failed'
             runtime.error = f'{type(error).__name__}: {error}'
             runtime.audit({'event': 'backend_load_failed', 'error': runtime.error})
+            # A dead loader with a live HTTP thread used to report "loading"
+            # forever.  Exit non-zero so systemd can perform its bounded retry.
+            os._exit(1)
     server = ThreadingHTTPServer(('127.0.0.1', args.port), handler_class(runtime))
     threading.Thread(target=load, daemon=True).start()
     try:

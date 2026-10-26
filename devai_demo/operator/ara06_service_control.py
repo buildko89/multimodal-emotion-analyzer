@@ -7,7 +7,9 @@ from pathlib import Path
 import re
 import subprocess
 
-ROOT = next((p for p in Path(__file__).resolve().parents if (p / '.git').exists() or (p / 'NEXT_STEP.md').exists()), Path(__file__).resolve().parents[2])
+_PARENTS = list(Path(__file__).resolve().parents)
+ROOT = next((p for p in _PARENTS if (p / 'NEXT_STEP.md').exists()),
+            next((p for p in _PARENTS if (p / '.git').exists()), Path(__file__).resolve().parents[2]))
 STRUCTURED = ROOT / 'devai/devai_ara/runs/ara06_structured_client_20261013_v1'
 RUN = ROOT / 'devai/devai_ara/runs/ara06_dev20_20261017_v1'
 REMOTE = '/root/devai_ara/ara06_structured_client_20261013_v1'

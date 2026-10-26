@@ -30,13 +30,13 @@ cd D:\source\repos\ara\devai_demo\operator
 
 ### 実行コマンド:
 ```powershell
-python -u ara_demo_continuous_operator.py --release ara_demo_20261026_v24 --session demo_continuous_check_01 --preflight-only
+python -u ara_demo_continuous_operator.py preflight --release ara_demo_20261026_v25 --session demo_continuous_YYYYMMDD_HHMMSS_preflight
 ```
 
 ### 正常合格基準:
 - `doctor_ok: true`
 - `health: "ready"`（Kinara ARA-2 上の Qwen2.5-7B が待機中）
-- `root_free_bytes >= 224,395,264 bytes`（214MiB 基準クリア）
+- `root_free_bytes >= 201,326,592 bytes`（192MiB 起動基準クリア）
 - `processes: []`（余分な古いプロセスがゼロ）
 - `device_holders: []`（カメラ・マイクの競合ロックなし）
 
@@ -54,7 +54,7 @@ python -u ara_demo_continuous_operator.py --release ara_demo_20261026_v24 --sess
 
 ### 実行コマンド:
 ```powershell
-python -u ara_demo_continuous_operator.py --release ara_demo_20261026_v24 --session demo_continuous_YYYYMMDD_HHMMSS_run01 --start
+python -u ara_demo_continuous_operator.py start --release ara_demo_20261026_v25 --session demo_continuous_YYYYMMDD_HHMMSS_run01 --reply "現在、カメラ・マイク入力の準備ができています"
 ```
 ※ `YYYYMMDD_HHMMSS` は実行日時に置き換えてください（例: `demo_continuous_20261115_100000_run01`）。
 
@@ -63,7 +63,8 @@ python -u ara_demo_continuous_operator.py --release ara_demo_20261026_v24 --sess
 2. 8秒ごとに自動で窓が切り出され、表情認識・頭部姿勢・ASR・Qwen2.5-7B推論が自律回転します。
 3. 来場者が話しかけると、画面下部に ASR 認識テキスト（字幕）が表示されます。
 4. Qwen2.5-7B が表情と発話に応じた親しみやすい対話応答を生成し、画面下部のメッセージカードに表示されます。
-5. ディスク上には常に直近3窓のみが保持され、過去の窓は自動削除されます。
+5. ディスク上には常に直近3窓、各worker要求は直近2件のみが保持され、過去データは自動削除されます。
+6. 連続運転上限は24時間です。正式受入では8時間以上の連続稼働を確認します。
 
 ---
 
@@ -72,13 +73,13 @@ python -u ara_demo_continuous_operator.py --release ara_demo_20261026_v24 --sess
 ### 4.1 リアルタイム稼働ステータス確認
 別ターミナルから実機の回転状況・メモリ・ストレージ空き容量を確認できます：
 ```powershell
-python -u ara_demo_continuous_operator.py --release ara_demo_20261026_v24 --session demo_continuous_YYYYMMDD_HHMMSS_run01 --status
+python -u ara_demo_continuous_operator.py status --release ara_demo_20261026_v25 --session demo_continuous_YYYYMMDD_HHMMSS_run01
 ```
 
 ### 4.2 実機 HDMI 画面のスクリーンショット取得
 現在の来場者認識画面や LLM 応答画面を PC 側へ即座に取得・保存できます：
 ```powershell
-python -u ara_demo_continuous_operator.py --release ara_demo_20261026_v24 --session demo_continuous_YYYYMMDD_HHMMSS_run01 --screenshot
+python -u ara_demo_continuous_operator.py screenshot --release ara_demo_20261026_v25 --session demo_continuous_YYYYMMDD_HHMMSS_run01
 ```
 - 保存先: `devai/devai_ara/runs/<session>/screenshots/screen_YYYYMMDD_HHMMSS.png`
 
@@ -90,14 +91,14 @@ python -u ara_demo_continuous_operator.py --release ara_demo_20261026_v24 --sess
 
 ### 5.1 安全停止（Graceful Stop）
 ```powershell
-python -u ara_demo_continuous_operator.py --release ara_demo_20261026_v24 --session demo_continuous_YYYYMMDD_HHMMSS_run01 --stop
+python -u ara_demo_continuous_operator.py stop --release ara_demo_20261026_v25 --session demo_continuous_YYYYMMDD_HHMMSS_run01
 ```
 - パイプラインが安全にループを終了し、カメラ・マイクのファイルディスクリプタを完全解放します。
 - 常駐 LLM サービスは Native 側で待機状態（ready）を維持します。
 
 ### 5.2 実行ログ・証拠の完全回収（Offload）
 ```powershell
-python -u ara_demo_continuous_operator.py --release ara_demo_20261026_v24 --session demo_continuous_YYYYMMDD_HHMMSS_run01 --offload
+python -u ara_demo_continuous_operator.py collect --release ara_demo_20261026_v25 --session demo_continuous_YYYYMMDD_HHMMSS_run01
 ```
 - 実機から全ログ、推論JSON、スクリーンショットを PC 側へ転送。
 - 全ファイルの SHA-256 ハッシュ照合を行い、整合性を確認します。

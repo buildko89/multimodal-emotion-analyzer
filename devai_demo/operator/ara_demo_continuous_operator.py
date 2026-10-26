@@ -18,7 +18,9 @@ import subprocess
 import sys
 import time
 
-ROOT = next((p for p in Path(__file__).resolve().parents if (p / '.git').exists() or (p / 'NEXT_STEP.md').exists()), Path(__file__).resolve().parents[2])
+_PARENTS = list(Path(__file__).resolve().parents)
+ROOT = next((p for p in _PARENTS if (p / 'NEXT_STEP.md').exists()),
+            next((p for p in _PARENTS if (p / '.git').exists()), Path(__file__).resolve().parents[2]))
 OPERATOR_DIR = Path(__file__).resolve().parent
 SCRIPTS = ROOT / 'devai/devai_ara/scripts'
 sys.path.insert(0, str(OPERATOR_DIR))
@@ -39,8 +41,9 @@ def save(path, data):
 
 class ContinuousOperator:
     def __init__(self, release, session):
-        if release not in ('ara_demo_20261025_v22', 'ara_demo_20261026_v23', 'ara_demo_20261026_v24'):
-            raise ValueError('Use reviewed v22, v23, or v24 release')
+        if release not in ('ara_demo_20261025_v22', 'ara_demo_20261026_v23',
+                           'ara_demo_20261026_v24', 'ara_demo_20261026_v25'):
+            raise ValueError('Use reviewed v22, v23, v24, or fixed v25 release')
         if not re.fullmatch(r'demo_(?:continuous|image)_[0-9]{8}_[0-9]{6}_[a-zA-Z0-9_]+', session):
             raise ValueError('Use demo_continuous_YYYYMMDD_HHMMSS_suffix or demo_image_ session name')
         demo.select_release(release)
@@ -71,7 +74,7 @@ p=Path({self.remote!r})
             release=self.release,
             mode='autonomous_continuous_rolling',
             window_seconds=8,
-            minimum_free_bytes=214 * 2**20,
+            minimum_free_bytes=192 * 2**20,
             autonomous_storage_protection=True,
             resident_qwen_companion_dialogue=True,
             user_preparation_reply_required=True,
@@ -100,7 +103,7 @@ print(json.dumps(out))
         d = value['doctor']
         is_resident = value.get('resident_ara', False)
         valid_health = (d['health']['state'] == 'ready') if is_resident else (d['health']['state'] == 'unreachable')
-        if not (d['ok'] and d['root_free_bytes'] >= 214 * 2**20
+        if not (d['ok'] and d['root_free_bytes'] >= 192 * 2**20
                 and not d['device_holders'] and not value['processes']
                 and valid_health and value['session_absent']):
             raise RuntimeError('Preflight rejected; inspect saved receipt, do not start')
@@ -112,7 +115,7 @@ print(json.dumps(out))
             session=self.session, reply=reply, received_utc=datetime.now(timezone.utc).isoformat(),
             autonomous_continuous_mode=True
         ))
-        value = self.remote_call(f'''assert shutil.disk_usage('/').free>=214*2**20
+        value = self.remote_call(f'''assert shutil.disk_usage('/').free>=192*2**20
 print(json.dumps(api['execute']('start',{self.session!r},False,False)))
 ''', 'start')
         save(self.case / 'start_receipt.json', value)
@@ -204,7 +207,7 @@ if __name__ == '__main__':
     sys.stderr.reconfigure(encoding='utf-8')
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('action', choices=['preflight', 'start', 'status', 'screenshot', 'stop', 'collect'])
-    parser.add_argument('--release', default='ara_demo_20261026_v23')
+    parser.add_argument('--release', default='ara_demo_20261026_v25')
     parser.add_argument('--session', required=True)
     parser.add_argument('--reply', help='User explicit readiness confirmation reply')
     parser.add_argument('--label', default='current', help='Label for screenshot')

@@ -172,7 +172,7 @@
     "capture_only": false,
     "diagnostic_replay": false,
     "diagnostic_seconds": 120,
-    "duration_seconds": 600,
+    "duration_seconds": 86400,
     "enabled": true,
     "explicit_interactions": true,
     "font_path": "/root/devai_ara/ara_demo_20261026_v24/release/workspace/assets/meiryo.ttc",
@@ -207,6 +207,7 @@
     "warmup_seconds": 12,
     "window_max_queue_age_seconds": 8,
     "window_seconds": 8,
+    "worker_request_retention": 2,
     "worker_deadline_seconds": 600,
     "stop_after_success": false
   },
@@ -231,6 +232,7 @@
     ],
     "visual_python": "/root/devai_ara/ara06_recording_app_20261014_v1/app_venv/bin/python",
     "worker_mode": "online",
+    "visual_stride": 4,
     "worker_timeout_seconds": 300
   },
   "output": {

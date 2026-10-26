@@ -2,6 +2,8 @@
 Description=Kinara ARA-2 LLM Resident Service (Qwen2.5-7B)
 After=network.target rt-sdk-ara2.service
 Wants=rt-sdk-ara2.service
+StartLimitIntervalSec=300
+StartLimitBurst=3
 
 [Service]
 Type=simple

@@ -76,19 +76,19 @@ PC の PowerShell から以下の通り実行します：
 cd D:\source\repos\ara\devai_demo\operator
 
 # 2. 実機健全性点検 (Pre-flight Doctor)
-python -u ara_demo_continuous_operator.py --release ara_demo_20261026_v24 --session demo_continuous_check_01 --preflight-only
+python -u ara_demo_continuous_operator.py preflight --release ara_demo_20261026_v25 --session demo_continuous_YYYYMMDD_HHMMSS_preflight
 
 # 3. 自律常時稼働デモの開始 (来場者を迎える)
-python -u ara_demo_continuous_operator.py --release ara_demo_20261026_v24 --session demo_continuous_YYYYMMDD_HHMMSS_run01 --start
+python -u ara_demo_continuous_operator.py start --release ara_demo_20261026_v25 --session demo_continuous_YYYYMMDD_HHMMSS_run01 --reply "現在、カメラ・マイク入力の準備ができています"
 
 # 4. 現在の画面スクリーンショット取得 (確認用)
-python -u ara_demo_continuous_operator.py --release ara_demo_20261026_v24 --session demo_continuous_YYYYMMDD_HHMMSS_run01 --screenshot
+python -u ara_demo_continuous_operator.py screenshot --release ara_demo_20261026_v25 --session demo_continuous_YYYYMMDD_HHMMSS_run01
 
 # 5. デモの安全停止 (終了時)
-python -u ara_demo_continuous_operator.py --release ara_demo_20261026_v24 --session demo_continuous_YYYYMMDD_HHMMSS_run01 --stop
+python -u ara_demo_continuous_operator.py stop --release ara_demo_20261026_v25 --session demo_continuous_YYYYMMDD_HHMMSS_run01
 
 # 6. ログ・証拠の完全回収
-python -u ara_demo_continuous_operator.py --release ara_demo_20261026_v24 --session demo_continuous_YYYYMMDD_HHMMSS_run01 --offload
+python -u ara_demo_continuous_operator.py collect --release ara_demo_20261026_v25 --session demo_continuous_YYYYMMDD_HHMMSS_run01
 ```
 
 ※ 詳細な手順・トラブルシューティングは [`docs/02_DEMO_RUNBOOK.md`](docs/02_DEMO_RUNBOOK.md) を参照してください。
@@ -100,9 +100,9 @@ python -u ara_demo_continuous_operator.py --release ara_demo_20261026_v24 --sess
 本 `devai_demo` フォルダを集約したことにより、今後のデモ向け開発・調整・検証はすべてここを正本として進めることができます。
 
 ### 次に進めるステップ:
-1. **ワーカー一時ファイル自動パージの実装 (`v25`):**
-   - `device_app/workspace/multimodal-emotion-analyzer/modules/live_pipeline.py` に、`worker_pool/visual/` および `worker_pool/sensevoice/` の古いリクエストディレクトリを自動消去するローリングパージを追加。
-2. **新リリース `v25` の実機配備と長時間連続稼働確認:**
-   - `operator/ara_demo.py` を用いて実機へハードリンク共有配備し、ディスク消費が 15〜20MB で完全フラット推移することを実証。
+1. **固定リリースV25の8時間連続稼働確認:**
+   - ワーカー要求は各backend直近2件、入力窓は直近3件に制限済み。実機でディスク・RAM・処理遅延がフラットに推移することを確認する。
+2. **実機入力での応答性確認:**
+   - Visualの重いFace/Hand推論を10fps相当から2.5fps相当へ間引き、全フレームの時系列行は維持。実機カメラ・マイクで効果と認識品質を確認する。
 3. **展示会本番向けシナリオ・演出の最終チューニング:**
    - 表情・頷き・発話に応じた Qwen2.5-7B の応答文言や HUD アバター演出をブース環境に合わせて微調整。

@@ -55,6 +55,9 @@ def visual(request, folder):
         raise ValueError('Hand model changed')
     if request['interval_seconds'][0] != 0:
         raise ValueError('Visual prototype processes a complete zero-origin recording')
+    stride = request.get('visual_stride', 2)
+    if isinstance(stride, bool) or not isinstance(stride, int) or not 1 <= stride <= 8:
+        raise ValueError('visual_stride_out_of_range')
     options = mp.tasks.vision.HandLandmarkerOptions(
         base_options=mp.tasks.BaseOptions(model_asset_path=str(hand_path)),
         running_mode=mp.tasks.vision.RunningMode.IMAGE,
@@ -77,7 +80,7 @@ def visual(request, folder):
                         raise ValueError('Invalid native PTS; no unlabeled timestamp fallback')
                     last_pts = pts
                     rgb = cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB)
-                    if len(rows) % 2 == 1 and face is not None:
+                    if len(rows) % stride != 0 and face is not None:
                         face = dict(face, frame_index=len(rows), timestamp_s=pts, frame_time_s=pts, timestamp_ms=round(pts * 1000))
                         eye_risk = dict(eye_risk, frame_time_s=pts)
                     else:
@@ -101,7 +104,8 @@ def visual(request, folder):
         raise ValueError('No video frames')
     eye_events = detect_eye_events(gate(rows, risks), duration_s=request['interval_seconds'][1])
     # No new event threshold is fitted to the three human reference labels.
-    geometry = {'frame_count': len(rows), 'eye_events': eye_events,
+    geometry = {'frame_count': len(rows), 'inference_stride': stride,
+                'inference_frames': (len(rows) + stride - 1) // stride, 'eye_events': eye_events,
                 'temporal_state': {'scope': 'this_window_only', 'state_id': uuid.uuid4().hex,
                                    'fresh_video_graph': True, 'timestamp_origin_seconds': 0},
                 'head_motion': {'status': 'raw_transform_only', 'nod_classifier': 'not_implemented'},

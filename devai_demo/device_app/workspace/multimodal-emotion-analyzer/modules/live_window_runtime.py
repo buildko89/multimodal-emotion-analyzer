@@ -2,8 +2,10 @@
 import json
 import os
 from pathlib import Path
+import shutil
 import signal
 import sys
+import time
 import uuid
 
 from modules.observation_worker_client import write_json
@@ -18,6 +20,9 @@ class LiveWindowRuntime:
         self.detector_instance_id = uuid.uuid4().hex
         self.windows_processed = 0
         self.clients = {}
+        self.worker_request_retention = int(config['live'].get('worker_request_retention', 2))
+        if not 1 <= self.worker_request_retention <= 16:
+            raise ValueError('worker_request_retention_out_of_range')
         try:
             for backend in ('sensevoice', 'emotion2vec', 'visual'):
                 executable = config['observation_integration'][
@@ -29,6 +34,43 @@ class LiveWindowRuntime:
         except BaseException:
             self.close()
             raise
+
+    def purge_worker_requests(self):
+        """Bound transport evidence after artifacts have been copied into a window.
+
+        Persistent worker request directories are UUID-named.  Logs are files and
+        are deliberately retained.  Purging happens only between requests, while
+        the owning runtime is the sole client of these directories.
+        """
+        state = {'retained_per_backend': self.worker_request_retention,
+                 'sampled_ns': time.monotonic_ns(), 'backends': {}}
+        for backend, client in self.clients.items():
+            root = client.directory.resolve()
+            if not root.is_relative_to(self.output / 'worker_pool'):
+                raise ValueError('worker_pool_outside_live_output')
+            requests = []
+            for path in root.iterdir():
+                if (path.is_dir() and not path.is_symlink() and len(path.name) == 32
+                        and all(c in '0123456789abcdef' for c in path.name)):
+                    requests.append(path)
+            requests.sort(key=lambda path: (path.stat().st_mtime_ns, path.name))
+            removed = []
+            for path in requests[:-self.worker_request_retention]:
+                resolved = path.resolve()
+                if resolved.parent != root:
+                    raise ValueError('worker_request_path_escape')
+                shutil.rmtree(resolved)
+                removed.append(path.name)
+            state['backends'][backend] = {
+                'requests_before': len(requests),
+                'requests_after': len(requests) - len(removed),
+                'removed_request_ids': removed,
+            }
+        target = self.output / 'worker_pool_state.json'
+        temporary = target.with_suffix('.tmp')
+        temporary.write_text(json.dumps(state, indent=2) + '\n', encoding='utf-8')
+        temporary.replace(target)
+        return state
 
     def new_app(self, config_path, *, preparation=False):
         from multimodal_app import MultiModalEmotionApp
@@ -92,6 +134,7 @@ def serve_windows(config_path):
         if config['live'].get('startup_preparation'):
             from modules.live_preparation import prepare_runtime
             prepare_runtime(runtime, config, WORKSPACE)
+            runtime.purge_worker_requests()
         for line in sys.stdin:
             request = json.loads(line)
             manifest = Path(request['manifest']).resolve()
@@ -101,5 +144,6 @@ def serve_windows(config_path):
             if 'config' in request and (request_config.parent != manifest.parent or request_config.name != 'processing_config.json'):
                 raise ValueError('window_config_outside_owned_window')
             process_window(manifest, request_config, runtime=runtime)
+            runtime.purge_worker_requests()
     finally:
         runtime.close()

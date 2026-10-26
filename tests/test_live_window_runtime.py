@@ -2,6 +2,7 @@
 from collections import deque
 from concurrent.futures import Future
 import json
+import os
 from pathlib import Path
 import sys
 import tempfile
@@ -29,6 +30,27 @@ def detector():
 
 
 class LiveRuntimeTests(unittest.TestCase):
+    def test_worker_pool_purge_keeps_only_newest_uuid_requests(self):
+        with tempfile.TemporaryDirectory(dir=WORKSPACE) as temporary:
+            output = Path(temporary)
+            pool = output/'worker_pool/sensevoice'
+            pool.mkdir(parents=True)
+            names = [f'{value:032x}' for value in range(4)]
+            for value, name in enumerate(names):
+                folder = pool/name
+                folder.mkdir()
+                (folder/'reply.json').write_text('{}')
+                os.utime(folder, ns=(value + 1, value + 1))
+            (pool/'persistent_001.log').write_text('keep log')
+            runtime = LiveWindowRuntime.__new__(LiveWindowRuntime)
+            runtime.output = output
+            runtime.worker_request_retention = 2
+            runtime.clients = {'sensevoice': types.SimpleNamespace(directory=pool)}
+            state = runtime.purge_worker_requests()
+            self.assertEqual(sorted(path.name for path in pool.iterdir() if path.is_dir()), names[-2:])
+            self.assertTrue((pool/'persistent_001.log').is_file())
+            self.assertEqual(state['backends']['sensevoice']['requests_after'], 2)
+
     def test_new_window_resets_people_and_smoothing_but_keeps_models(self):
         instance = detector()
         model, face = instance.emotion_model, instance.face_model

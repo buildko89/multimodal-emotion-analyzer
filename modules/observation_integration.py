@@ -252,7 +252,9 @@ class ObservationIntegrationSession:
             [executable, '-B', script], self.directory / backend, backend_id=backend, allowed_root=WORKSPACE)
         with context as client:
             payload = {'clip_id': self.clip_id}
-            if backend != 'visual':
+            if backend == 'visual':
+                payload['visual_stride'] = self.config.get('visual_stride', 2)
+            else:
                 payload.update(sample_interval=[0, self.samples], pcm_sha256=self.pcm_sha,
                                audio_offset_seconds=self.media_begin,
                                torch_num_threads=self.config.get('audio_torch_threads',
