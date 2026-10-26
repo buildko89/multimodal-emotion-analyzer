@@ -2,7 +2,13 @@
 
 **最終更新:** 2026-10-26 (Asia/Tokyo)  
 **対象環境:** NXP i.MX95 EVK + Kinara ARA-2 M.2 + Linux Yocto BSP + PC (Windows / PowerShell)  
-**目的:** 過去の膨大な試行錯誤・実験資産から、**「11月展示デモの成立・運用に真に必要なスクリプト・ドキュメント・実機実装物」を抽出し、一元集約・体系化**したディレクトリです。
+**リポジトリ:** [multimodal-emotion-analyzer (GitHub)](https://github.com/buildko89/multimodal-emotion-analyzer.git)  
+**目的:** 過去の膨大な試行錯誤・実験資産から、**「11月展示デモの成立・運用に真に必要なスクリプト・ドキュメント・実機実装物」を抽出し、一元集約・体系化**したパッケージです。
+
+> [!IMPORTANT]
+> **今後の開発・管理ルール（ユーザー指示・2026-10-26）:**
+> 1. **バージョン番号の固定（V25 Fix）:** バージョン番号は「V25」でFixします。以後はV25をベースとして改善を進め、バージョンフォルダを際限なく増やしません。
+> 2. **GitHub 一元管理:** ファイル増加による管理混乱を防ぐため、本集約パッケージおよびアプリケーション本体は [`multimodal-emotion-analyzer` GitHub リポジトリ](https://github.com/buildko89/multimodal-emotion-analyzer.git) でソースコードとドキュメントを一元管理します。
 
 ---
 
