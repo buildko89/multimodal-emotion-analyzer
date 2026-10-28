@@ -11,8 +11,10 @@ from collections import deque
 from copy import deepcopy
 import hashlib
 import json
+import math
 import os
 from pathlib import Path
+import shutil
 import signal
 import subprocess
 import sys
@@ -20,7 +22,7 @@ import threading
 import time
 import wave
 
-from modules.live_capture import LatestWindowQueue, TimedPCM, NativeMicrophone, camera_frames, validate_closed_window
+from modules.live_capture import SpeechPriorityWindowQueue, TimedPCM, NativeMicrophone, camera_frames, validate_closed_window
 
 REPO = Path(__file__).resolve().parents[1]
 WORKSPACE = REPO.parent
@@ -30,9 +32,65 @@ def write(path, value):
     Path(path).write_text(json.dumps(value, ensure_ascii=False, indent=2, allow_nan=False) + '\n', encoding='utf-8')
 
 
+def purge_processed_windows(windows_dir, retention=3):
+    """Keep the strongest-audio window plus the newest completed windows."""
+    if isinstance(retention, bool) or not isinstance(retention, int) or not 3 <= retention <= 16:
+        raise ValueError('processed_window_retention_out_of_range')
+    root = Path(windows_dir).resolve()
+    if not root.is_dir():
+        return {'retention': retention, 'retained': [], 'removed': []}
+    entries = []
+    for path in root.iterdir():
+        if not (path.is_dir() and not path.is_symlink()
+                and path.name.startswith('live_') and path.name[5:].isdigit()):
+            continue
+        manifest_path = path/'capture_manifest.json'
+        if not manifest_path.is_file():
+            continue
+        manifest = json.loads(manifest_path.read_text(encoding='utf-8'))
+        energy = float(manifest.get('audio_rms', -1))
+        interval = manifest.get('interval_ns')
+        if (not math.isfinite(energy) or energy < 0 or not isinstance(interval, list)
+                or len(interval) != 2 or not all(isinstance(value, int) for value in interval)):
+            raise ValueError('invalid_processed_window_retention_metadata')
+        entries.append({'path': path, 'window_id': path.name, 'audio_rms': energy,
+                        'source_end_ns': interval[1]})
+    retained = []
+    if entries:
+        retained.append(max(entries, key=lambda item: (item['audio_rms'], item['source_end_ns'])))
+        for item in sorted(entries, key=lambda item: item['source_end_ns'], reverse=True):
+            if item not in retained:
+                retained.append(item)
+            if len(retained) >= retention:
+                break
+    retained_paths = {item['path'] for item in retained}
+    removed = []
+    for item in entries:
+        if item['path'] in retained_paths:
+            continue
+        resolved = item['path'].resolve()
+        if resolved.parent != root:
+            raise ValueError('processed_window_path_escape')
+        shutil.rmtree(resolved)
+        removed.append({key: value for key, value in item.items() if key != 'path'})
+    return {'retention': retention,
+            'policy': 'strongest_audio_plus_newest_completed_windows',
+            'retained': [{key: value for key, value in item.items() if key != 'path'} for item in retained],
+            'removed': removed}
+
+
 def window_configuration(configuration, interaction, folder):
     """Freeze the exact preference revision used by a dispatched perception window."""
     config = deepcopy(configuration)
+    live = config['live']
+    realtime_backends = live.get('realtime_ser_backends')
+    if realtime_backends is not None:
+        if not isinstance(realtime_backends, list) or not realtime_backends:
+            raise ValueError('realtime_ser_backends_required')
+        config['observation_integration']['ser_backends'] = list(realtime_backends)
+    realtime_threads = live.get('realtime_audio_torch_threads')
+    if realtime_threads is not None:
+        config['observation_integration']['audio_torch_threads_by_backend'] = dict(realtime_threads)
     if interaction is not None:
         config['cooperative_ai']['preferences'] = deepcopy(interaction.history)
         config['live']['preference_revision'] = interaction.preference_revision
@@ -134,7 +192,11 @@ def process_window(manifest_path, config_path, *, runtime=None):
     data = json.loads(envelope.read_text())
     data['input']['live_capture_manifest_sha256'] = hashlib.sha256(Path(manifest_path).read_bytes()).hexdigest()
     write(envelope, data)
-    production = run_saved_observations(envelope, output/'production_10s', {**cooperative, 'timeout_seconds': 10})
+    production_timeout = float(live.get('production_timeout_seconds', 10))
+    if not 1 <= production_timeout <= 10:
+        raise ValueError('production_timeout_seconds_out_of_range')
+    production = run_saved_observations(envelope, output/'production_10s',
+                                        {**cooperative, 'timeout_seconds': production_timeout})
     write(output.parent/'production_display.json', {
         'source_end_ns': manifest['interval_ns'][1], 'text': production['response']['accepted']['text'],
         'status': production['response']['status'], 'label':live.get('llm_label','ARA短文'),
@@ -184,7 +246,7 @@ def run_live(configuration):
     owned_runtime = {}
     if not preparation: preparation_ready.set()
     if not live.get('post_ready_start_gate', False): post_ready_capture.set()
-    queue = LatestWindowQueue()
+    queue = SpeechPriorityWindowQueue(capacity=2)
     ring = TimedPCM(retain_seconds=max(30, live.get('window_seconds', 3)+10))
     shared = {'status': 'カメラ・マイクを起動中', 'camera_frames': 0, 'audio_samples': 0,
               'audio_rms': 0, 'max_result_age_seconds': live.get('max_result_age_seconds', 300),
@@ -232,7 +294,7 @@ def run_live(configuration):
             register_fault(role,f'{type(error).__name__}: {error}')
     def audio_event(event):
         emit(event)
-        if event['event'] == 'audio_idle_recovery':
+        if event['event'] in ('audio_idle_recovery', 'audio_xrun_recovery'):
             with lock:
                 shared.update(audio_recoveries=event['recovery_count'], audio_samples=0,
                               audio_available_ns=event['available_ns'])
@@ -327,16 +389,21 @@ def run_live(configuration):
                             break
                         time.sleep(.02)
                 if audio is not None:
+                    signal_value = np.frombuffer(audio['pcm'], dtype='<i2').astype(np.float32) / 32768
+                    audio_rms = float(np.sqrt(np.mean(signal_value ** 2)))
+                    audio_peak = float(np.max(np.abs(signal_value)))
                     counter += 1
                     window = {'window_id': f'live_{counter:06d}', 'interval_ns': [start, end],
-                        'closed_available_ns': time.monotonic_ns(), 'frames': frames, 'audio': audio}
+                        'closed_available_ns': time.monotonic_ns(), 'frames': frames, 'audio': audio,
+                        'audio_rms': audio_rms, 'audio_peak': audio_peak}
                     window['capture_clock_basis']=shared.get('capture_clock_basis','linux_native_monotonic')
                     if gate is not None: window['capture_request_id']=gate.pending['request_id']
                     validate_closed_window(window, time.monotonic_ns())
                     queue.put(window)
                     emit({'event': 'window_closed', 'window_id': window['window_id'],
                           'interval_ns': window['interval_ns'], 'frames': len(frames),
-                          'audio_samples': audio['sample_count'], 'closed_available_ns': window['closed_available_ns']})
+                          'audio_samples': audio['sample_count'], 'audio_rms': audio_rms,
+                          'audio_peak': audio_peak, 'closed_available_ns': window['closed_available_ns']})
                 else:
                     emit({'event': 'input_gap', 'interval_ns': [start, end], 'reason': 'audio_window_not_available'})
                 frames = []
@@ -459,16 +526,12 @@ def run_live(configuration):
             try:
                 with lock: shared['status'] = '実入力窓の知覚・ARA診断を処理中（遅延あり）'
                 manifest = encode_window(window, folder)
-                try:
-                    _win_dir = output / 'windows'
-                    if _win_dir.is_dir():
-                        _past = sorted([p for p in _win_dir.iterdir() if p.is_dir()], key=lambda p: p.name)
-                        if len(_past) > 3:
-                            import shutil as _sh
-                            for _old_p in _past[:-3]:
-                                _sh.rmtree(_old_p, ignore_errors=True)
-                except Exception:
-                    pass
+                retention = purge_processed_windows(
+                    output/'windows', int(live.get('processed_window_retention', 3)))
+                write(output/'processed_window_retention.json', retention)
+                for removed in retention['removed']:
+                    emit({'event': 'processed_window_purged', **removed,
+                          'policy': retention['policy']})
                 del window
                 with lock:
                     shared['visual_result'] = dict(state='processing', window_id=manifest['window_id'],
@@ -590,11 +653,18 @@ def run_live(configuration):
         queue.close()
     def resources():
         from modules.live_resources import memory_snapshot
+        sample_seconds = float(live.get('resource_sample_seconds', 60))
+        if not 5 <= sample_seconds <= 300:
+            raise ValueError('resource_sample_seconds_out_of_range')
+        next_sample = 0.0
         with (output/'memory_samples.jsonl').open('x', encoding='utf-8') as stream:
             while not stop.is_set():
                 snapshot = memory_snapshot(WORKSPACE)
-                stream.write(json.dumps(snapshot, allow_nan=False)+'\n')
-                stream.flush()
+                now = time.monotonic()
+                if now >= next_sample:
+                    stream.write(json.dumps(snapshot, allow_nan=False)+'\n')
+                    stream.flush()
+                    next_sample = now + sample_seconds
                 if snapshot['mem_available_bytes'] < live.get('minimum_mem_available_bytes', 400*1024**2):
                     emit({'event':'resource_headroom_stop', 'mem_available_bytes':snapshot['mem_available_bytes']})
                     request_stop()
@@ -606,14 +676,21 @@ def run_live(configuration):
     old_term_handler = signal.signal(signal.SIGTERM, request_stop)
     def microphone():
         device = live.get('microphone', 'hw:3,0')
+        allow_continuous = live.get('allow_capture_xrun_recovery', True)
+        max_recoveries = int(live.get('max_xrun_recoveries', 100))
         if live.get('capture_backend') == 'windows':
             microphone_type(device).run(stop, ring, audio_event)
         else:
-            microphone_type(device, idle_recovery_allowed=lambda: (
-                live.get('record_on_request', False) and not stop.is_set()
-                and not (output/'capture_command.json').exists()
-                and not (output.parent/'recording_operator_ready.json').exists()
-            )).run(stop, ring, audio_event)
+            microphone_type(
+                device,
+                idle_recovery_allowed=lambda: (
+                    live.get('record_on_request', False) and not stop.is_set()
+                    and not (output/'capture_command.json').exists()
+                    and not (output.parent/'recording_operator_ready.json').exists()
+                ),
+                allow_continuous_recovery=allow_continuous,
+                max_recoveries=max_recoveries
+            ).run(stop, ring, audio_event)
     threads = [threading.Thread(target=lambda:guarded(microphone,'microphone'),name='microphone'),
                threading.Thread(target=lambda:guarded(camera,'camera'),name='camera'),
                threading.Thread(target=consumer,name='perception')]

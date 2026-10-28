@@ -182,7 +182,8 @@ def build_from_release(source_name):
                                  'sensevoice_four_thread_live_priority','four_second_ara_budget',
                                  'strongest_audio_processed_window_retention',
                                  'remove_unused_framebuffer_backup',
-                                 'sixty_second_resource_evidence_with_five_second_guard'],
+                                 'sixty_second_resource_evidence_with_five_second_guard',
+                                 'allow_capture_xrun_recovery'],
         'files':{p.relative_to(package).as_posix():hashlib.sha256(p.read_bytes()).hexdigest()
                  for p in package.rglob('*') if p.is_file() and p!=package/'manifest.json'}}
     (package/'manifest.json').write_text(json.dumps(candidate,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')

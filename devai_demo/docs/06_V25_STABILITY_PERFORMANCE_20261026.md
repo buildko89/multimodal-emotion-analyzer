@@ -132,6 +132,18 @@ session `demo_continuous_20261028_140206_v25_realtime_live`で、開始前とrea
 短時間checkは省容量化と終了処理の確認であり、8時間安定動作の達成とはしない。
 本人の新しい準備確認を経て8時間運転を完了し、その後に追加のリアルタイム化へ進む。
 
+## 2026-10-28 長時間連続稼働向け ALSA XRUN 自動復帰（recovery）の追加
+
+8時間耐久試験セッション `demo_continuous_20261028_142628_v25_soak8h` において、約31分間（1,868.99秒稼働後、カメラ18,467フレーム、音声2,980万サンプル）安定稼働後、マイク入力で ALSA EPIPE（`-32`）が発生し安全停止した。停止直前の本人発話（「今日は寒いですね」）、HDMI短文表示、基板音声案内はすべて本人確認済み。
+
+短時間評価向けに実装されていた `idle_recovery_allowed`（録音待機中のみ復帰を許可し、録音要求中は停止する）が、常時armed状態となる長時間連続稼働（continuous soak）でも作動し、偶発的な1回のXRUNに対して復帰を試みず即座に例外停止していた。
+
+対策として以下を実装・配備：
+- `NativeMicrophone` に `allow_continuous_recovery` オプション（既定: True、最大上限: 100回）を追加。
+- 連続稼働モードにおいて ALSA EPIPE (-32) が発生した場合、即時停止せず `snd_pcm_prepare` による安全なPCMリングバッファリセット・新エポック記録（`audio_xrun_recovery` イベント）を行い、キャプチャを自動継続。
+- 重複窓は `input_gap`（`reason: audio_window_not_available`）として安全にスキップされ、次窓から新PCMで推論処理が再開される。
+
+
 ## 配備・常駐サービス確認
 
 - V25 doctor: `ok=true`

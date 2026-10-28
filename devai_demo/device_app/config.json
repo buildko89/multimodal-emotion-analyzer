@@ -196,6 +196,10 @@
       "sensevoice"
     ],
     "sample_resources": true,
+
+    "allow_capture_xrun_recovery": true,
+
+    "max_xrun_recoveries": 100,
     "resource_sample_seconds": 60,
     "sensor_capture": true,
     "speech_output": {

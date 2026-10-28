@@ -294,7 +294,7 @@ def run_live(configuration):
             register_fault(role,f'{type(error).__name__}: {error}')
     def audio_event(event):
         emit(event)
-        if event['event'] == 'audio_idle_recovery':
+        if event['event'] in ('audio_idle_recovery', 'audio_xrun_recovery'):
             with lock:
                 shared.update(audio_recoveries=event['recovery_count'], audio_samples=0,
                               audio_available_ns=event['available_ns'])
@@ -676,14 +676,21 @@ def run_live(configuration):
     old_term_handler = signal.signal(signal.SIGTERM, request_stop)
     def microphone():
         device = live.get('microphone', 'hw:3,0')
+        allow_continuous = live.get('allow_capture_xrun_recovery', True)
+        max_recoveries = int(live.get('max_xrun_recoveries', 100))
         if live.get('capture_backend') == 'windows':
             microphone_type(device).run(stop, ring, audio_event)
         else:
-            microphone_type(device, idle_recovery_allowed=lambda: (
-                live.get('record_on_request', False) and not stop.is_set()
-                and not (output/'capture_command.json').exists()
-                and not (output.parent/'recording_operator_ready.json').exists()
-            )).run(stop, ring, audio_event)
+            microphone_type(
+                device,
+                idle_recovery_allowed=lambda: (
+                    live.get('record_on_request', False) and not stop.is_set()
+                    and not (output/'capture_command.json').exists()
+                    and not (output.parent/'recording_operator_ready.json').exists()
+                ),
+                allow_continuous_recovery=allow_continuous,
+                max_recoveries=max_recoveries
+            ).run(stop, ring, audio_event)
     threads = [threading.Thread(target=lambda:guarded(microphone,'microphone'),name='microphone'),
                threading.Thread(target=lambda:guarded(camera,'camera'),name='camera'),
                threading.Thread(target=consumer,name='perception')]

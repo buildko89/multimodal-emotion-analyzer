@@ -217,71 +217,83 @@ def validate_closed_window(window, now_ns):
         raise ValueError('audio_outside_closed_window')
 
 
-class NativeMicrophone:
-    """Use the system ALSA library, keeping its monotonic hardware timestamps."""
-    def __init__(self, device='hw:3,0', rate=16000, idle_recovery_allowed=None):
-        self.device, self.rate = device, rate
-        self.idle_recovery_allowed = idle_recovery_allowed
-
-    def run(self, stop, ring, emit):
-        import ctypes as c
-        lib = c.CDLL('libasound.so.2')
-        pointer = c.c_void_p
-        class Timespec(c.Structure):
-            _fields_ = [('tv_sec', c.c_long), ('tv_nsec', c.c_long)]
-        signatures = {
-            'snd_pcm_open': ([c.POINTER(pointer), c.c_char_p, c.c_int, c.c_int], c.c_int),
-            'snd_pcm_set_params': ([pointer, c.c_int, c.c_int, c.c_uint, c.c_uint, c.c_int, c.c_uint], c.c_int),
-            'snd_pcm_readi': ([pointer, pointer, c.c_ulong], c.c_long),
-            'snd_pcm_wait': ([pointer, c.c_int], c.c_int),
-            'snd_pcm_start': ([pointer], c.c_int),
-            'snd_pcm_prepare': ([pointer], c.c_int),
-            'snd_pcm_sw_params_malloc': ([c.POINTER(pointer)], c.c_int),
-            'snd_pcm_sw_params_current': ([pointer, pointer], c.c_int),
-            'snd_pcm_sw_params_set_tstamp_mode': ([pointer, pointer, c.c_int], c.c_int),
-            'snd_pcm_sw_params_set_tstamp_type': ([pointer, pointer, c.c_int], c.c_int),
-            'snd_pcm_sw_params': ([pointer, pointer], c.c_int),
-            'snd_pcm_sw_params_free': ([pointer], None),
-            'snd_pcm_status_malloc': ([c.POINTER(pointer)], c.c_int),
-            'snd_pcm_status': ([pointer, pointer], c.c_int),
-            'snd_pcm_status_get_trigger_htstamp': ([pointer, c.POINTER(Timespec)], None),
-            'snd_pcm_status_get_htstamp': ([pointer, c.POINTER(Timespec)], None),
-            'snd_pcm_status_get_delay': ([pointer], c.c_long),
-            'snd_pcm_status_free': ([pointer], None),
-            'snd_pcm_close': ([pointer], c.c_int),
-        }
-        for name, (args, result) in signatures.items():
-            getattr(lib, name).argtypes = args
-            getattr(lib, name).restype = result
-        def check(code):
-            if code < 0:
-                raise RuntimeError(f'alsa_error_{code}')
-            return code
-        pcm, sw, status = pointer(), pointer(), pointer()
-        total, trigger_ns = 0, None
-        recoveries = 0
-        def recover_if_idle(code):
-            nonlocal total, trigger_ns, recoveries
-            if code >= 0:
-                return False
-            if (code != -32 or self.idle_recovery_allowed is None
-                    or not self.idle_recovery_allowed()):
-                check(code)
-            if recoveries >= 3:
-                raise RuntimeError('alsa_idle_xrun_recovery_limit')
-            previous_trigger = trigger_ns
-            check(lib.snd_pcm_prepare(pcm))
-            ring.reset()
-            total, trigger_ns = 0, None
-            check(lib.snd_pcm_start(pcm))
-            if not self.idle_recovery_allowed():
-                raise RuntimeError('alsa_xrun_record_request_race')
-            recoveries += 1
-            emit({'event': 'audio_idle_recovery', 'alsa_error': code,
-                  'recovery_count': recoveries, 'previous_trigger_ns': previous_trigger,
-                  'previous_pcm_discarded': True, 'new_trigger_epoch_required': True,
-                  'available_ns': time.monotonic_ns(), 'recording_requested': False})
-            return True
+class NativeMicrophone:
+    """Use the system ALSA library, keeping its monotonic hardware timestamps."""
+    def __init__(self, device='hw:3,0', rate=16000, idle_recovery_allowed=None,
+                 allow_continuous_recovery=False, max_recoveries=100):
+        self.device, self.rate = device, rate
+        self.idle_recovery_allowed = idle_recovery_allowed
+        self.allow_continuous_recovery = allow_continuous_recovery
+        self.max_recoveries = max_recoveries
+
+    def run(self, stop, ring, emit):
+        import ctypes as c
+        lib = c.CDLL('libasound.so.2')
+        pointer = c.c_void_p
+        class Timespec(c.Structure):
+            _fields_ = [('tv_sec', c.c_long), ('tv_nsec', c.c_long)]
+        signatures = {
+            'snd_pcm_open': ([c.POINTER(pointer), c.c_char_p, c.c_int, c.c_int], c.c_int),
+            'snd_pcm_set_params': ([pointer, c.c_int, c.c_int, c.c_uint, c.c_uint, c.c_int, c.c_uint], c.c_int),
+            'snd_pcm_readi': ([pointer, pointer, c.c_ulong], c.c_long),
+            'snd_pcm_wait': ([pointer, c.c_int], c.c_int),
+            'snd_pcm_start': ([pointer], c.c_int),
+            'snd_pcm_prepare': ([pointer], c.c_int),
+            'snd_pcm_sw_params_malloc': ([c.POINTER(pointer)], c.c_int),
+            'snd_pcm_sw_params_current': ([pointer, pointer], c.c_int),
+            'snd_pcm_sw_params_set_tstamp_mode': ([pointer, pointer, c.c_int], c.c_int),
+            'snd_pcm_sw_params_set_tstamp_type': ([pointer, pointer, c.c_int], c.c_int),
+            'snd_pcm_sw_params': ([pointer, pointer], c.c_int),
+            'snd_pcm_sw_params_free': ([pointer], None),
+            'snd_pcm_status_malloc': ([c.POINTER(pointer)], c.c_int),
+            'snd_pcm_status': ([pointer, pointer], c.c_int),
+            'snd_pcm_status_get_trigger_htstamp': ([pointer, c.POINTER(Timespec)], None),
+            'snd_pcm_status_get_htstamp': ([pointer, c.POINTER(Timespec)], None),
+            'snd_pcm_status_get_delay': ([pointer], c.c_long),
+            'snd_pcm_status_free': ([pointer], None),
+            'snd_pcm_close': ([pointer], c.c_int),
+        }
+        for name, (args, result) in signatures.items():
+            getattr(lib, name).argtypes = args
+            getattr(lib, name).restype = result
+        def check(code):
+            if code < 0:
+                raise RuntimeError(f'alsa_error_{code}')
+            return code
+        pcm, sw, status = pointer(), pointer(), pointer()
+        total, trigger_ns = 0, None
+        recoveries = 0
+        def recover_xrun(code):
+            nonlocal total, trigger_ns, recoveries
+            if code >= 0:
+                return False
+            if code != -32:
+                check(code)
+            continuous = self.allow_continuous_recovery
+            if not continuous:
+                if (self.idle_recovery_allowed is None or not self.idle_recovery_allowed()):
+                    check(code)
+                if recoveries >= 3:
+                    raise RuntimeError('alsa_idle_xrun_recovery_limit')
+            else:
+                if recoveries >= self.max_recoveries:
+                    raise RuntimeError('alsa_continuous_xrun_recovery_limit')
+            previous_trigger = trigger_ns
+            check(lib.snd_pcm_prepare(pcm))
+            ring.reset()
+            total, trigger_ns = 0, None
+            check(lib.snd_pcm_start(pcm))
+            if not continuous and not self.idle_recovery_allowed():
+                raise RuntimeError('alsa_xrun_record_request_race')
+            recoveries += 1
+            emit({'event': 'audio_xrun_recovery' if continuous else 'audio_idle_recovery',
+                  'alsa_error': code,
+                  'recovery_count': recoveries, 'previous_trigger_ns': previous_trigger,
+                  'previous_pcm_discarded': True, 'new_trigger_epoch_required': True,
+                  'available_ns': time.monotonic_ns(),
+                  'recording_requested': False,
+                  'continuous_mode': continuous})
+            return True
         try:
             check(lib.snd_pcm_open(c.byref(pcm), self.device.encode(), 1, 1))
             # S16_LE=2, RW_INTERLEAVED=3, one channel, no resampling.
@@ -297,14 +309,14 @@ class NativeMicrophone:
             while not stop.is_set():
                 count = lib.snd_pcm_readi(pcm, buffer, 1600)
                 if count == -11:
-                    recover_if_idle(lib.snd_pcm_wait(pcm, 100))
+                    recover_xrun(lib.snd_pcm_wait(pcm, 100))
                     continue
-                if recover_if_idle(count):
+                if recover_xrun(count):
                     continue
                 check(count)
                 if not count:
                     continue
-                if recover_if_idle(lib.snd_pcm_status(pcm, status)):
+                if recover_xrun(lib.snd_pcm_status(pcm, status)):
                     continue
                 trigger, now = Timespec(), Timespec()
                 lib.snd_pcm_status_get_trigger_htstamp(status, c.byref(trigger))
