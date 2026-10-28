@@ -1,9 +1,9 @@
 """SSH-only exhibition autonomous continuous rolling demo operator.
 
 Enables hands-free autonomous continuous operation:
-- Automatically acquires rolling 8s windows (camera + mic)
+- Automatically acquires rolling 4s windows (camera + mic)
 - Runs real-time visual emotion recognition and ASR
-- Prompts resident Qwen2.5-7B (timeout: 30s) for natural Japanese companion dialogue
+- Prompts resident Qwen2.5-7B with a 4s live-response budget and validated fallback
 - Continuously purges older windows (retaining only latest 3 windows, disk permanently safe > 214 MiB)
 - Provides real-time status monitoring, on-demand HDMI screenshot capture, and safe stop/collection.
 """
@@ -73,9 +73,12 @@ p=Path({self.remote!r})
             session=self.session,
             release=self.release,
             mode='autonomous_continuous_rolling',
-            window_seconds=8,
+            window_seconds=4,
             minimum_free_bytes=192 * 2**20,
             autonomous_storage_protection=True,
+            pending_window_policy='strongest_audio_plus_latest_bounded_two',
+            realtime_ser_backends=['sensevoice'],
+            production_timeout_seconds=4,
             resident_qwen_companion_dialogue=True,
             user_preparation_reply_required=True,
             created_utc=datetime.now(timezone.utc).isoformat()

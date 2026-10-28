@@ -133,7 +133,14 @@ def build_from_release(source_name):
     manifest=json.loads((source/'manifest.json').read_text(encoding='utf-8'))
     assert all(hashlib.sha256((source/n).read_bytes()).hexdigest()==h for n,h in manifest['files'].items()),'Source release integrity'
     package=RUN/'release';package.parent.mkdir(parents=True,exist_ok=True)
-    shutil.copytree(source,package)
+    if package.exists():
+        current=json.loads((package/'manifest.json').read_text(encoding='utf-8'))
+        if current.get('release')!=NAME or current.get('parent_release')!=source_name:
+            raise ValueError('Existing fixed release does not match requested V25 lineage')
+        assert all(hashlib.sha256((package/n).read_bytes()).hexdigest()==h
+                   for n,h in current['files'].items()),'Existing fixed release integrity'
+    else:
+        shutil.copytree(source,package)
     old_prefix='/root/devai_ara/'+source_name+'/release'
     # devai_demo/device_app is the V25 source of truth.  Overlay it on the
     # verified release so dependencies and immutable assets remain pinned.
@@ -146,8 +153,10 @@ def build_from_release(source_name):
         bytecode.unlink()
     run_state = package/'workspace/runs'
     if run_state.exists():
-        shutil.rmtree(run_state)
-    run_state.mkdir()
+        if any(run_state.iterdir()):
+            raise ValueError('Local build artifact unexpectedly contains run evidence')
+    else:
+        run_state.mkdir()
     config=remap_release(json.loads((package/'config.json').read_text(encoding='utf-8')),old_prefix,RELEASE)
     # The centralized source may already point at another reviewed release.
     def remap_any_demo_release(value):
@@ -168,7 +177,9 @@ def build_from_release(source_name):
         'dependencies':[p for p in manifest['dependencies'] if p not in numeric],
         'audio_devices':requirements(config),
         'configuration_changes':['v25_centralized_device_app','bounded_worker_pool',
-                                 '24_hour_runtime','visual_stride_4','release_paths'],
+                                 '24_hour_runtime','visual_stride_4','release_paths',
+                                 'speech_priority_queue','four_second_realtime_window',
+                                 'sensevoice_four_thread_live_priority','four_second_ara_budget'],
         'files':{p.relative_to(package).as_posix():hashlib.sha256(p.read_bytes()).hexdigest()
                  for p in package.rglob('*') if p.is_file() and p!=package/'manifest.json'}}
     (package/'manifest.json').write_text(json.dumps(candidate,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')

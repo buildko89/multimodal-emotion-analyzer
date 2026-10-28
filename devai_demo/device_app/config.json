@@ -176,17 +176,24 @@
     "enabled": true,
     "explicit_interactions": true,
     "font_path": "/root/devai_ara/ara_demo_20261026_v24/release/workspace/assets/meiryo.ttc",
-    "idle_capture_status": "実機デモ準備完了。準備回答後だけ8秒間、映像・音声を記録します。",
+    "idle_capture_status": "実機デモ準備完了。準備回答後に4秒窓で映像・音声を認識します。",
     "interaction_scope": "actual",
-    "max_result_age_seconds": 600,
+    "max_result_age_seconds": 120,
     "maximum_processed_windows": 999999,
     "microphone": "hw:CARD=U0x46d0x825,DEV=0",
     "output": "SET_BY_SUPERVISOR",
     "persistent_windows": true,
     "post_ready_start_gate": true,
+    "production_timeout_seconds": 4,
     "preference_is_test_fixture": false,
     "preparation_deadline_seconds": 420,
     "record_on_request": false,
+    "realtime_audio_torch_threads": {
+      "sensevoice": 4
+    },
+    "realtime_ser_backends": [
+      "sensevoice"
+    ],
     "sample_resources": true,
     "sensor_capture": true,
     "speech_output": {
@@ -206,8 +213,8 @@
       }
     },
     "warmup_seconds": 12,
-    "window_max_queue_age_seconds": 8,
-    "window_seconds": 8,
+    "window_max_queue_age_seconds": 60,
+    "window_seconds": 4,
     "worker_request_retention": 2,
     "worker_deadline_seconds": 600,
     "stop_after_success": false

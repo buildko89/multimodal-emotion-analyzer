@@ -75,6 +75,76 @@ class LatestWindowQueue:
             self.condition.notify_all()
 
 
+class SpeechPriorityWindowQueue:
+    """Bounded queue retaining the strongest-audio and newest pending windows.
+
+    Closed-window inference is slower than capture on the i.MX95.  A latest-only
+    queue can therefore discard the one interval containing speech while the
+    consumer is busy.  This queue stays bounded while preserving that candidate.
+    """
+    def __init__(self, capacity=2):
+        if isinstance(capacity, bool) or not isinstance(capacity, int) or capacity != 2:
+            raise ValueError('speech_priority_queue_capacity_must_be_two')
+        self.capacity = capacity
+        self.condition = threading.Condition()
+        self.pending = []
+        self.closed = False
+        self.gaps = []
+
+    @staticmethod
+    def _end(window):
+        return window['interval_ns'][1]
+
+    @staticmethod
+    def _energy(window):
+        return float(window.get('audio_rms', 0.0))
+
+    def put(self, window):
+        with self.condition:
+            if self.closed:
+                raise RuntimeError('queue_closed')
+            candidates = self.pending + [window]
+            strongest = max(candidates, key=lambda item: (self._energy(item), self._end(item)))
+            newest = max(candidates, key=self._end)
+            selected = [strongest]
+            if newest is not strongest:
+                selected.append(newest)
+            elif len(candidates) > 1:
+                selected.append(max((item for item in candidates if item is not strongest), key=self._end))
+            retained = {id(item) for item in selected[:self.capacity]}
+            for item in candidates:
+                if id(item) not in retained:
+                    self.gaps.append({'window_id': item['window_id'],
+                        'interval_ns': item['interval_ns'], 'audio_rms': self._energy(item),
+                        'reason': 'superseded_lower_priority_window'})
+            self.pending = selected[:self.capacity]
+            self.condition.notify()
+
+    def get(self):
+        with self.condition:
+            self.condition.wait_for(lambda: self.pending or self.closed)
+            if self.closed:
+                for item in self.pending:
+                    self.gaps.append({'window_id': item['window_id'],
+                        'interval_ns': item['interval_ns'], 'audio_rms': self._energy(item),
+                        'reason': 'stopped_pending_window'})
+                self.pending = []
+                return None
+            selected = max(self.pending, key=lambda item: (self._energy(item), self._end(item)))
+            self.pending.remove(selected)
+            return selected
+
+    def close(self):
+        with self.condition:
+            self.closed = True
+            for item in self.pending:
+                self.gaps.append({'window_id': item['window_id'],
+                    'interval_ns': item['interval_ns'], 'audio_rms': self._energy(item),
+                    'reason': 'stopped_pending_window'})
+            self.pending = []
+            self.condition.notify_all()
+
+
 class TimedPCM:
     """Retain a fixed duration of PCM with ALSA monotonic trigger/sample clock."""
     def __init__(self, rate=16000, retain_seconds=12):

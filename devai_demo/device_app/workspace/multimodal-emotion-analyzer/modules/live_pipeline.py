@@ -20,7 +20,7 @@ import threading
 import time
 import wave
 
-from modules.live_capture import LatestWindowQueue, TimedPCM, NativeMicrophone, camera_frames, validate_closed_window
+from modules.live_capture import SpeechPriorityWindowQueue, TimedPCM, NativeMicrophone, camera_frames, validate_closed_window
 
 REPO = Path(__file__).resolve().parents[1]
 WORKSPACE = REPO.parent
@@ -33,6 +33,15 @@ def write(path, value):
 def window_configuration(configuration, interaction, folder):
     """Freeze the exact preference revision used by a dispatched perception window."""
     config = deepcopy(configuration)
+    live = config['live']
+    realtime_backends = live.get('realtime_ser_backends')
+    if realtime_backends is not None:
+        if not isinstance(realtime_backends, list) or not realtime_backends:
+            raise ValueError('realtime_ser_backends_required')
+        config['observation_integration']['ser_backends'] = list(realtime_backends)
+    realtime_threads = live.get('realtime_audio_torch_threads')
+    if realtime_threads is not None:
+        config['observation_integration']['audio_torch_threads_by_backend'] = dict(realtime_threads)
     if interaction is not None:
         config['cooperative_ai']['preferences'] = deepcopy(interaction.history)
         config['live']['preference_revision'] = interaction.preference_revision
@@ -134,7 +143,11 @@ def process_window(manifest_path, config_path, *, runtime=None):
     data = json.loads(envelope.read_text())
     data['input']['live_capture_manifest_sha256'] = hashlib.sha256(Path(manifest_path).read_bytes()).hexdigest()
     write(envelope, data)
-    production = run_saved_observations(envelope, output/'production_10s', {**cooperative, 'timeout_seconds': 10})
+    production_timeout = float(live.get('production_timeout_seconds', 10))
+    if not 1 <= production_timeout <= 10:
+        raise ValueError('production_timeout_seconds_out_of_range')
+    production = run_saved_observations(envelope, output/'production_10s',
+                                        {**cooperative, 'timeout_seconds': production_timeout})
     write(output.parent/'production_display.json', {
         'source_end_ns': manifest['interval_ns'][1], 'text': production['response']['accepted']['text'],
         'status': production['response']['status'], 'label':live.get('llm_label','ARA短文'),
@@ -184,7 +197,7 @@ def run_live(configuration):
     owned_runtime = {}
     if not preparation: preparation_ready.set()
     if not live.get('post_ready_start_gate', False): post_ready_capture.set()
-    queue = LatestWindowQueue()
+    queue = SpeechPriorityWindowQueue(capacity=2)
     ring = TimedPCM(retain_seconds=max(30, live.get('window_seconds', 3)+10))
     shared = {'status': 'カメラ・マイクを起動中', 'camera_frames': 0, 'audio_samples': 0,
               'audio_rms': 0, 'max_result_age_seconds': live.get('max_result_age_seconds', 300),
@@ -327,16 +340,21 @@ def run_live(configuration):
                             break
                         time.sleep(.02)
                 if audio is not None:
+                    signal_value = np.frombuffer(audio['pcm'], dtype='<i2').astype(np.float32) / 32768
+                    audio_rms = float(np.sqrt(np.mean(signal_value ** 2)))
+                    audio_peak = float(np.max(np.abs(signal_value)))
                     counter += 1
                     window = {'window_id': f'live_{counter:06d}', 'interval_ns': [start, end],
-                        'closed_available_ns': time.monotonic_ns(), 'frames': frames, 'audio': audio}
+                        'closed_available_ns': time.monotonic_ns(), 'frames': frames, 'audio': audio,
+                        'audio_rms': audio_rms, 'audio_peak': audio_peak}
                     window['capture_clock_basis']=shared.get('capture_clock_basis','linux_native_monotonic')
                     if gate is not None: window['capture_request_id']=gate.pending['request_id']
                     validate_closed_window(window, time.monotonic_ns())
                     queue.put(window)
                     emit({'event': 'window_closed', 'window_id': window['window_id'],
                           'interval_ns': window['interval_ns'], 'frames': len(frames),
-                          'audio_samples': audio['sample_count'], 'closed_available_ns': window['closed_available_ns']})
+                          'audio_samples': audio['sample_count'], 'audio_rms': audio_rms,
+                          'audio_peak': audio_peak, 'closed_available_ns': window['closed_available_ns']})
                 else:
                     emit({'event': 'input_gap', 'interval_ns': [start, end], 'reason': 'audio_window_not_available'})
                 frames = []

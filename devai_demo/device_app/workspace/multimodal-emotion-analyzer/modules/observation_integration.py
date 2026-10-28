@@ -255,10 +255,13 @@ class ObservationIntegrationSession:
             if backend == 'visual':
                 payload['visual_stride'] = self.config.get('visual_stride', 2)
             else:
+                per_backend_threads = self.config.get('audio_torch_threads_by_backend', {})
+                thread_count = per_backend_threads.get(backend, self.config.get('audio_torch_threads',
+                    2 if self.config.get('parallel_backends',False) else 4))
+                if isinstance(thread_count, bool) or not isinstance(thread_count, int) or not 1 <= thread_count <= 6:
+                    raise ValueError('audio_torch_threads_out_of_range')
                 payload.update(sample_interval=[0, self.samples], pcm_sha256=self.pcm_sha,
-                               audio_offset_seconds=self.media_begin,
-                               torch_num_threads=self.config.get('audio_torch_threads',
-                                   2 if self.config.get('parallel_backends',False) else 4))
+                               audio_offset_seconds=self.media_begin, torch_num_threads=thread_count)
             reply = client.submit(self.video if backend == 'visual' else self.common_audio, interval,
                                   timeout_s=self.config.get('worker_timeout_seconds', 120),
                                   mode=self.config.get('worker_mode', 'offline'),
