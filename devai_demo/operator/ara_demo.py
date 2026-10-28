@@ -179,7 +179,8 @@ def build_from_release(source_name):
         'configuration_changes':['v25_centralized_device_app','bounded_worker_pool',
                                  '24_hour_runtime','visual_stride_4','release_paths',
                                  'speech_priority_queue','four_second_realtime_window',
-                                 'sensevoice_four_thread_live_priority','four_second_ara_budget'],
+                                 'sensevoice_four_thread_live_priority','four_second_ara_budget',
+                                 'strongest_audio_processed_window_retention'],
         'files':{p.relative_to(package).as_posix():hashlib.sha256(p.read_bytes()).hexdigest()
                  for p in package.rglob('*') if p.is_file() and p!=package/'manifest.json'}}
     (package/'manifest.json').write_text(json.dumps(candidate,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')

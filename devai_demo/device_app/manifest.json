@@ -2,7 +2,7 @@
   "release": "ara_demo_20261026_v25",
   "files": {
     "audio_devices.py": "c449d9083c93108d0531896a5cf05b103e8f14225a2acbd64030ecaca8435876",
-    "config.json": "611c2b6619325a2ebee5f6188880f6a7cbb76385a0feda2be89e0db808f7ee5e",
+    "config.json": "c431958f5da90bbcec52be8002e3aab8de31361837ad87de363545dd05196f0c",
     "dependency_manifest.json": "54f7b2664d13b338d5ac4a7a86a6b236ed5b97e0edde4cd219c28404a5f64544",
     "runtime.py": "cbd1f9f6753ef9d274b23b2fb0bda2734acc1a4f013146e0449669691e4d058c",
     "startup_guard.py": "3664ce703d16623f199eab7e42ceb92c6e80de58cb16cf605e24bdd3d8158953",
@@ -56,7 +56,7 @@
     "workspace/multimodal-emotion-analyzer/modules/live_capture.py": "1db88f6fb86514de7663e9e73b25d966327cfe7d240939f23fb33bbe889efb63",
     "workspace/multimodal-emotion-analyzer/modules/live_health.py": "c72fb192f667c2d340d51d201d0f36786ea335129f2490b44af531b466633f1c",
     "workspace/multimodal-emotion-analyzer/modules/live_interaction.py": "46075e0d4f28cb8c9a36c50fa4b7507d36e3a4d43b30ec7d6088925cbb42d523",
-    "workspace/multimodal-emotion-analyzer/modules/live_pipeline.py": "0566d997f6aa6105101a61784b33e3a1abfd0a96ff0d68af6071accf562d8516",
+    "workspace/multimodal-emotion-analyzer/modules/live_pipeline.py": "6ba7c99cbd70ca00677950a3ff9a76b5b8ab0c7f7be0dfdac91cf4b1955fa3ce",
     "workspace/multimodal-emotion-analyzer/modules/live_preparation.py": "494fa786130a7c7d2e3c42647426a180c4556461536d7338ab3dbfa28463a808",
     "workspace/multimodal-emotion-analyzer/modules/live_resources.py": "436a469658e52a6a928fb7fe79c6c694eea234c081acd46d68cdda3d72a61c4b",
     "workspace/multimodal-emotion-analyzer/modules/live_visual_display.py": "27ebe341c5334b25ce438fb84895145ad514f857a411ff3fe9f9cde072c39b5a",
@@ -116,7 +116,8 @@
     "speech_priority_queue_bounded_two",
     "sensevoice_four_thread_live_priority",
     "four_second_realtime_window",
-    "four_second_ara_budget"
+    "four_second_ara_budget",
+    "strongest_audio_processed_window_retention"
   ],
   "parent_release": "ara_demo_20261026_v24",
   "audio_devices": {

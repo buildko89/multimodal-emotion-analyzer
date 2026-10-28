@@ -184,6 +184,7 @@
     "output": "SET_BY_SUPERVISOR",
     "persistent_windows": true,
     "post_ready_start_gate": true,
+    "processed_window_retention": 3,
     "production_timeout_seconds": 4,
     "preference_is_test_fixture": false,
     "preparation_deadline_seconds": 420,

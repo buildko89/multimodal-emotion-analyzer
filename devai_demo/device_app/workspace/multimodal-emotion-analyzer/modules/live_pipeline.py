@@ -11,8 +11,10 @@ from collections import deque
 from copy import deepcopy
 import hashlib
 import json
+import math
 import os
 from pathlib import Path
+import shutil
 import signal
 import subprocess
 import sys
@@ -28,6 +30,53 @@ WORKSPACE = REPO.parent
 
 def write(path, value):
     Path(path).write_text(json.dumps(value, ensure_ascii=False, indent=2, allow_nan=False) + '\n', encoding='utf-8')
+
+
+def purge_processed_windows(windows_dir, retention=3):
+    """Keep the strongest-audio window plus the newest completed windows."""
+    if isinstance(retention, bool) or not isinstance(retention, int) or not 3 <= retention <= 16:
+        raise ValueError('processed_window_retention_out_of_range')
+    root = Path(windows_dir).resolve()
+    if not root.is_dir():
+        return {'retention': retention, 'retained': [], 'removed': []}
+    entries = []
+    for path in root.iterdir():
+        if not (path.is_dir() and not path.is_symlink()
+                and path.name.startswith('live_') and path.name[5:].isdigit()):
+            continue
+        manifest_path = path/'capture_manifest.json'
+        if not manifest_path.is_file():
+            continue
+        manifest = json.loads(manifest_path.read_text(encoding='utf-8'))
+        energy = float(manifest.get('audio_rms', -1))
+        interval = manifest.get('interval_ns')
+        if (not math.isfinite(energy) or energy < 0 or not isinstance(interval, list)
+                or len(interval) != 2 or not all(isinstance(value, int) for value in interval)):
+            raise ValueError('invalid_processed_window_retention_metadata')
+        entries.append({'path': path, 'window_id': path.name, 'audio_rms': energy,
+                        'source_end_ns': interval[1]})
+    retained = []
+    if entries:
+        retained.append(max(entries, key=lambda item: (item['audio_rms'], item['source_end_ns'])))
+        for item in sorted(entries, key=lambda item: item['source_end_ns'], reverse=True):
+            if item not in retained:
+                retained.append(item)
+            if len(retained) >= retention:
+                break
+    retained_paths = {item['path'] for item in retained}
+    removed = []
+    for item in entries:
+        if item['path'] in retained_paths:
+            continue
+        resolved = item['path'].resolve()
+        if resolved.parent != root:
+            raise ValueError('processed_window_path_escape')
+        shutil.rmtree(resolved)
+        removed.append({key: value for key, value in item.items() if key != 'path'})
+    return {'retention': retention,
+            'policy': 'strongest_audio_plus_newest_completed_windows',
+            'retained': [{key: value for key, value in item.items() if key != 'path'} for item in retained],
+            'removed': removed}
 
 
 def window_configuration(configuration, interaction, folder):
@@ -477,16 +526,12 @@ def run_live(configuration):
             try:
                 with lock: shared['status'] = '実入力窓の知覚・ARA診断を処理中（遅延あり）'
                 manifest = encode_window(window, folder)
-                try:
-                    _win_dir = output / 'windows'
-                    if _win_dir.is_dir():
-                        _past = sorted([p for p in _win_dir.iterdir() if p.is_dir()], key=lambda p: p.name)
-                        if len(_past) > 3:
-                            import shutil as _sh
-                            for _old_p in _past[:-3]:
-                                _sh.rmtree(_old_p, ignore_errors=True)
-                except Exception:
-                    pass
+                retention = purge_processed_windows(
+                    output/'windows', int(live.get('processed_window_retention', 3)))
+                write(output/'processed_window_retention.json', retention)
+                for removed in retention['removed']:
+                    emit({'event': 'processed_window_purged', **removed,
+                          'policy': retention['policy']})
                 del window
                 with lock:
                     shared['visual_result'] = dict(state='processing', window_id=manifest['window_id'],
