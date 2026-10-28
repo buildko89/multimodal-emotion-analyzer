@@ -2,7 +2,7 @@
   "release": "ara_demo_20261026_v25",
   "files": {
     "audio_devices.py": "c449d9083c93108d0531896a5cf05b103e8f14225a2acbd64030ecaca8435876",
-    "config.json": "c431958f5da90bbcec52be8002e3aab8de31361837ad87de363545dd05196f0c",
+    "config.json": "1f3db506b0e128150ebb0e1f82e83be53a74ab5dd1816b62b675638b91f4384e",
     "dependency_manifest.json": "54f7b2664d13b338d5ac4a7a86a6b236ed5b97e0edde4cd219c28404a5f64544",
     "runtime.py": "cbd1f9f6753ef9d274b23b2fb0bda2734acc1a4f013146e0449669691e4d058c",
     "startup_guard.py": "3664ce703d16623f199eab7e42ceb92c6e80de58cb16cf605e24bdd3d8158953",
@@ -50,13 +50,13 @@
     "workspace/multimodal-emotion-analyzer/modules/driver_observation_features.py": "115c6b1f13b7f83503237497fe6625a21a7429a39a76581545c96a9a3159d8be",
     "workspace/multimodal-emotion-analyzer/modules/driver_recognition.py": "109c94ef4dd9abce70b56d9f7b630416b2213062e14c6d3aa0be7130911283f2",
     "workspace/multimodal-emotion-analyzer/modules/driver_response_policy.py": "0892cf915ff5b77abf4b46c6ad4f2baacce3c371770264070e985f6be8566f63",
-    "workspace/multimodal-emotion-analyzer/modules/framebuffer_display.py": "a453668d68209dde27a7f24c4f8485dd124e690ca7f856f8bb815245fb95f8fc",
+    "workspace/multimodal-emotion-analyzer/modules/framebuffer_display.py": "9006f54bbe827408e26a04d71b9b7992acd2c32c011fa89886ef99c643cf140c",
     "workspace/multimodal-emotion-analyzer/modules/funasr_scoped_import.py": "b24738eb9e120e9887a58dcdccee8ddbac80bf509b3644bb0169efe22723b97e",
     "workspace/multimodal-emotion-analyzer/modules/head_motion_observability.py": "333ddeaf517c2479ed9418f2258385360f1cbcb3c5d3f52458a9b34ed0edbd8e",
     "workspace/multimodal-emotion-analyzer/modules/live_capture.py": "1db88f6fb86514de7663e9e73b25d966327cfe7d240939f23fb33bbe889efb63",
     "workspace/multimodal-emotion-analyzer/modules/live_health.py": "c72fb192f667c2d340d51d201d0f36786ea335129f2490b44af531b466633f1c",
     "workspace/multimodal-emotion-analyzer/modules/live_interaction.py": "46075e0d4f28cb8c9a36c50fa4b7507d36e3a4d43b30ec7d6088925cbb42d523",
-    "workspace/multimodal-emotion-analyzer/modules/live_pipeline.py": "6ba7c99cbd70ca00677950a3ff9a76b5b8ab0c7f7be0dfdac91cf4b1955fa3ce",
+    "workspace/multimodal-emotion-analyzer/modules/live_pipeline.py": "0779569e2f00c76bb633653ebd95d7d1c949531bd2eb33385226f62728a6ca4b",
     "workspace/multimodal-emotion-analyzer/modules/live_preparation.py": "494fa786130a7c7d2e3c42647426a180c4556461536d7338ab3dbfa28463a808",
     "workspace/multimodal-emotion-analyzer/modules/live_resources.py": "436a469658e52a6a928fb7fe79c6c694eea234c081acd46d68cdda3d72a61c4b",
     "workspace/multimodal-emotion-analyzer/modules/live_visual_display.py": "27ebe341c5334b25ce438fb84895145ad514f857a411ff3fe9f9cde072c39b5a",
@@ -117,7 +117,9 @@
     "sensevoice_four_thread_live_priority",
     "four_second_realtime_window",
     "four_second_ara_budget",
-    "strongest_audio_processed_window_retention"
+    "strongest_audio_processed_window_retention",
+    "remove_unused_framebuffer_backup",
+    "sixty_second_resource_evidence_with_five_second_guard"
   ],
   "parent_release": "ara_demo_20261026_v24",
   "audio_devices": {

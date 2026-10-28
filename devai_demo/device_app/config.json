@@ -196,6 +196,7 @@
       "sensevoice"
     ],
     "sample_resources": true,
+    "resource_sample_seconds": 60,
     "sensor_capture": true,
     "speech_output": {
       "catalog": "/root/devai_ara/ara_demo_20261026_v24/release/workspace/assets/speech_manifest.json",

@@ -100,6 +100,38 @@ session `demo_continuous_20261028_140206_v25_realtime_live`で、開始前とrea
 今回値は前回より大幅に短縮したが、窓末尾からASRまで約14秒、表示まで約19秒であり、
 厳密なリアルタイム達成とは扱わない。PC評価・保存動画再評価は実施していない。
 
+## 2026-10-28 長時間安定性を優先する容量改善
+
+ユーザー方針により、追加のリアルタイム化より8時間以上の安定動作を先に完了する。
+今回sessionの実行中空きは223,731,712 bytesから201,166,848 bytesまで低下した。
+回収証拠20,053,993 bytesの主な内訳は次のとおり。
+
+- 未使用`framebuffer_before.bin`：8,294,400 bytes
+- 保持3窓：4,756,751 bytes
+- preparation：3,810,364 bytes
+- worker pool：559,867 bytes
+- `memory_samples.jsonl`：223秒・42標本で108,457 bytes
+
+`framebuffer_before.bin`は書込み以外の参照がなく、画面復帰はsupervisorのWeston leaseで
+実施されるため保存を廃止した。これにより毎session約8.3MBを削減する。
+
+資源安全監視は従来どおり5秒ごとに実行し、headroom違反時の停止応答を維持する。
+一方、詳細なRAM／Swap process標本のディスク書込みは60秒ごととし、8時間換算で
+約15MBから約1.3MBへ抑える。監視周期と証拠書込み周期を分離し、安全性は下げない。
+
+変更後の録音なし実機check
+`demo_continuous_20261028_141646_v25_stability_check`で次を確認した。
+
+- 起動要求からHDMI readyまで96.072秒、`ready_reached=true`、`error=null`
+- Visual／SenseVoice／Emotion2Vecはすべて`ok`
+- 新録音0、全process／worker終了、Weston復帰、device holder 0
+- 約98秒で`memory_samples.jsonl`は2標本、`framebuffer_before.bin`は非生成
+- 72 files・7,784,730 bytesをremote前後／PCで全hash一致
+- 3コピー後にoffloadし、実機空き223,690,752 bytesへ復元
+
+短時間checkは省容量化と終了処理の確認であり、8時間安定動作の達成とはしない。
+本人の新しい準備確認を経て8時間運転を完了し、その後に追加のリアルタイム化へ進む。
+
 ## 配備・常駐サービス確認
 
 - V25 doctor: `ok=true`

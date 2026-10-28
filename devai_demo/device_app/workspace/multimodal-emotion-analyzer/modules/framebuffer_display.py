@@ -84,7 +84,9 @@ class FramebufferDisplay:
         if f.line_length < 4 * (v.xoffset + v.xres) or f.smem_len < f.line_length * v.yres_virtual:
             raise ValueError('invalid_framebuffer_bounds')
         self.mapped = mmap.mmap(self.device.fileno(), f.smem_len, access=mmap.ACCESS_WRITE)
-        (self.output / 'framebuffer_before.bin').write_bytes(self.mapped[:])
+        # The supervisor restores the leased Weston desktop after this process
+        # exits. A raw framebuffer copy was never read and consumed 8.3 MB in
+        # every session, so do not persist an unused duplicate.
         # fbcon's blinking text cursor can overwrite the application framebuffer.
         # Own only the currently active VT; restore its original mode on close.
         tty = Path('/sys/class/tty/tty0/active').read_text().strip()

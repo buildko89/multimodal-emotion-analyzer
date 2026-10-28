@@ -653,11 +653,18 @@ def run_live(configuration):
         queue.close()
     def resources():
         from modules.live_resources import memory_snapshot
+        sample_seconds = float(live.get('resource_sample_seconds', 60))
+        if not 5 <= sample_seconds <= 300:
+            raise ValueError('resource_sample_seconds_out_of_range')
+        next_sample = 0.0
         with (output/'memory_samples.jsonl').open('x', encoding='utf-8') as stream:
             while not stop.is_set():
                 snapshot = memory_snapshot(WORKSPACE)
-                stream.write(json.dumps(snapshot, allow_nan=False)+'\n')
-                stream.flush()
+                now = time.monotonic()
+                if now >= next_sample:
+                    stream.write(json.dumps(snapshot, allow_nan=False)+'\n')
+                    stream.flush()
+                    next_sample = now + sample_seconds
                 if snapshot['mem_available_bytes'] < live.get('minimum_mem_available_bytes', 400*1024**2):
                     emit({'event':'resource_headroom_stop', 'mem_available_bytes':snapshot['mem_available_bytes']})
                     request_stop()
