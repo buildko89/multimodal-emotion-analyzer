@@ -79,7 +79,30 @@ def purge_processed_windows(windows_dir, retention=3):
             'removed': removed}
 
 
-def window_configuration(configuration, interaction, folder):
+def asr_energy_limits(gate, history):
+    """Silence limits for one window, from windows closed before it only.
+
+    The absolute limits rise toward the recent noise floor (a low quantile, so
+    occasional speech does not lift it) and stay capped below speech levels.
+    """
+    limits = {'rms_below': gate['rms_below'], 'peak_below': gate['peak_below'], 'basis': 'absolute'}
+    adaptive = gate.get('adaptive')
+    if not adaptive or len(history) < adaptive.get('minimum_windows', 10):
+        return limits
+    quantile = adaptive.get('floor_quantile', 0.2)
+    floors = {}
+    for index, name in enumerate(('rms', 'peak')):
+        values = sorted(item[index] for item in history)
+        floors[name] = values[int(quantile * (len(values) - 1))]
+    limits.update(
+        rms_below=min(adaptive['rms_below_cap'], max(gate['rms_below'], floors['rms']*adaptive['rms_floor_ratio'])),
+        peak_below=min(adaptive['peak_below_cap'], max(gate['peak_below'], floors['peak']*adaptive['peak_floor_ratio'])),
+        basis='recent_noise_floor', history_windows=len(history), floor_quantile=quantile,
+        rms_floor=floors['rms'], peak_floor=floors['peak'])
+    return limits
+
+
+def window_configuration(configuration, interaction, folder, energy_gate=None):
     """Freeze the exact preference revision used by a dispatched perception window."""
     config = deepcopy(configuration)
     live = config['live']
@@ -92,7 +115,8 @@ def window_configuration(configuration, interaction, folder):
     if realtime_threads is not None:
         config['observation_integration']['audio_torch_threads_by_backend'] = dict(realtime_threads)
     # Live windows only; startup preparation keeps checking every backend.
-    energy_gate = live.get('asr_energy_gate')
+    if energy_gate is None and live.get('asr_energy_gate') is not None:
+        energy_gate = asr_energy_limits(live['asr_energy_gate'], [])
     if energy_gate is not None:
         config['observation_integration']['asr_energy_gate'] = dict(energy_gate)
     if interaction is not None:
@@ -312,6 +336,8 @@ def run_live(configuration):
             shared['audio_rms'] = float(np.sqrt(np.mean(signal_value**2)))
     def camera():
         frames, counter = [], 0
+        energy_gate = live.get('asr_energy_gate')
+        audio_history = deque(maxlen=(energy_gate or {}).get('adaptive', {}).get('history_windows', 30))
         from modules.live_capture import ManualCaptureGate
         gate = ManualCaptureGate() if live.get('record_on_request',False) else None
         for frame in capture_camera(stop, live.get('camera', '/dev/video4')):
@@ -400,6 +426,9 @@ def run_live(configuration):
                     window = {'window_id': f'live_{counter:06d}', 'interval_ns': [start, end],
                         'closed_available_ns': time.monotonic_ns(), 'frames': frames, 'audio': audio,
                         'audio_rms': audio_rms, 'audio_peak': audio_peak}
+                    if energy_gate is not None:
+                        window['asr_energy_gate'] = asr_energy_limits(energy_gate, audio_history)
+                    audio_history.append((audio_rms, audio_peak))
                     window['capture_clock_basis']=shared.get('capture_clock_basis','linux_native_monotonic')
                     if gate is not None: window['capture_request_id']=gate.pending['request_id']
                     validate_closed_window(window, time.monotonic_ns())
@@ -550,7 +579,8 @@ def run_live(configuration):
                     break
                 persistent = live.get('persistent_windows', False)
                 with lock:
-                    request_config = window_configuration(config, interaction, folder)
+                    request_config = window_configuration(config, interaction, folder,
+                                                          manifest.get('asr_energy_gate'))
                 if not persistent or process is None:
                     process = launch_runtime(owned, config_path if persistent else request_config,
                                              persistent=persistent, folder=folder)

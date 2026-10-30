@@ -170,6 +170,15 @@
   "live": {
     "ara_startup_warmup": false,
     "asr_energy_gate": {
+      "adaptive": {
+        "floor_quantile": 0.2,
+        "history_windows": 30,
+        "minimum_windows": 10,
+        "peak_below_cap": 0.1,
+        "peak_floor_ratio": 1.5,
+        "rms_below_cap": 0.022,
+        "rms_floor_ratio": 1.2
+      },
       "peak_below": 0.03,
       "rms_below": 0.012
     },

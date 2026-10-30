@@ -232,6 +232,7 @@ class ObservationIntegrationSession:
         peak = float(np.max(np.abs(signal)))
         return {'policy': 'skip_sensevoice_when_rms_and_peak_below', 'rms': rms, 'peak': peak,
                 'rms_below': limits[0], 'peak_below': limits[1],
+                'limits_basis': {k: v for k, v in gate.items() if k not in ('rms_below', 'peak_below')},
                 'skipped': rms < limits[0] and peak < limits[1], 'speech_verified': False}
 
     def asr_skipped(self, backend):
