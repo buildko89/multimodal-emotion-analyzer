@@ -235,6 +235,13 @@ class MultiModalEmotionApp:
                                                                     clients=getattr(self, 'observation_clients', None))
             audio_file = str(self.observation_session.common_audio)
         self.processing_timing['session_ready_ns'] = time.monotonic_ns()
+        def write_timing():
+            self.processing_timing['completed_ns'] = time.monotonic_ns()
+            if self.config['output']['save_results']:
+                (self.output_dir/'pipeline_timing.json').write_text(
+                    json.dumps(self.processing_timing, indent=2)+'\n', encoding='utf-8')
+        self.deferred_finish = None
+        completed_loop = False
         try:
             if overlap:
                 # Worker requests already run in parallel. Resolve ASR only after
@@ -244,11 +251,18 @@ class MultiModalEmotionApp:
             else:
                 self._resolve_file_speech(asr_backend, audio_file)
                 self._process_video(video_source, with_audio=True)
+            completed_loop = True
         finally:
-            self.processing_timing['completed_ns'] = time.monotonic_ns()
-            if self.config['output']['save_results']:
-                (self.output_dir/'pipeline_timing.json').write_text(
-                    json.dumps(self.processing_timing, indent=2)+'\n', encoding='utf-8')
+            deferred = self.deferred_finish if completed_loop else None
+            if deferred is None:
+                write_timing()
+        if deferred is not None:
+            def finish():
+                try:
+                    deferred()
+                finally:
+                    write_timing()
+            self.deferred_finish = finish
 
     def _resolve_file_speech(self, asr_backend, audio_file):
         self.processing_timing['asr_wait_started_ns'] = time.monotonic_ns()
@@ -389,57 +403,65 @@ class MultiModalEmotionApp:
             if self.config["display"]["show_window"]:
                 cv2.destroyAllWindows()
 
-            # 統計表示
-            if with_audio and (resolve_speech is None or completion == 'end_of_stream'):
-                if resolve_speech is not None:
-                    resolve_speech()
-                    joiner = WindowJoiner(speech_windows(
-                        self.speech_result or {}, origin_ns,
-                        float(self.config.get('synchronization', {}).get('audio_offset_seconds', 0))),
-                        min_confidence=float(self.config.get('emotion_recognition', {}).get(
-                            'smoothing', {}).get('min_confidence', 0.3)))
-                    # Replay measurements, never image inference or a new input.
-                    with (self.output_dir/'frame_observations.jsonl').open(encoding='utf-8') as stream:
-                        for line in stream:
-                            observation = json.loads(line)
-                            joiner.observe(observation['media_aligned_monotonic_ns'], observation['faces'])
-                timing['fusion_started_ns'] = time.monotonic_ns()
-                events = list(joiner.results(processed_until_ns))
-                for event in events:
-                    if event["status"] == "aligned":
-                        event["analysis"] = self.multimodal_analyzer.analyze(
-                            emotion_data=event["emotion_data"], speech_data=event["speech_data"],
-                            timestamp=event["window_end_ns"] / 1e9,
-                        )
+            # Live overlap: the frame loop is done; the rest only waits on this
+            # window's workers and files, so the next window may start meanwhile.
+            def finish_window():
+                nonlocal joiner
+                # 統計表示
+                if with_audio and (resolve_speech is None or completion == 'end_of_stream'):
+                    if resolve_speech is not None:
+                        resolve_speech()
+                        joiner = WindowJoiner(speech_windows(
+                            self.speech_result or {}, origin_ns,
+                            float(self.config.get('synchronization', {}).get('audio_offset_seconds', 0))),
+                            min_confidence=float(self.config.get('emotion_recognition', {}).get(
+                                'smoothing', {}).get('min_confidence', 0.3)))
+                        # Replay measurements, never image inference or a new input.
+                        with (self.output_dir/'frame_observations.jsonl').open(encoding='utf-8') as stream:
+                            for line in stream:
+                                observation = json.loads(line)
+                                joiner.observe(observation['media_aligned_monotonic_ns'], observation['faces'])
+                    timing['fusion_started_ns'] = time.monotonic_ns()
+                    events = list(joiner.results(processed_until_ns))
+                    for event in events:
+                        if event["status"] == "aligned":
+                            event["analysis"] = self.multimodal_analyzer.analyze(
+                                emotion_data=event["emotion_data"], speech_data=event["speech_data"],
+                                timestamp=event["window_end_ns"] / 1e9,
+                            )
+                    if self.config["output"]["save_results"]:
+                        with (self.output_dir / "fusion_windows.jsonl").open("w", encoding="utf-8") as stream:
+                            for event in events:
+                                stream.write(json.dumps(event, ensure_ascii=False) + "\n")
+                    self._print_final_statistics()
+                    timing['fusion_completed_ns'] = time.monotonic_ns()
                 if self.config["output"]["save_results"]:
-                    with (self.output_dir / "fusion_windows.jsonl").open("w", encoding="utf-8") as stream:
-                        for event in events:
-                            stream.write(json.dumps(event, ensure_ascii=False) + "\n")
-                self._print_final_statistics()
-                timing['fusion_completed_ns'] = time.monotonic_ns()
-            if self.config["output"]["save_results"]:
-                with (self.output_dir / "video_summary.json").open("w", encoding="utf-8") as stream:
-                    json.dump({"schema_version": 1, "source": str(video_source),
-                               "source_kind": "file" if is_file else "capture",
-                               "timeline_origin_ns": origin_ns,
-                               "timestamp_basis": "origin_plus_media_pts" if is_file else "capture_monotonic",
-                               "fps": fps if is_file else None, "frames_read": index,
-                               "frames_processed": self.frame_count,
-                               "processed_until_ns": processed_until_ns,
-                               "pts_fallback_count": pts_fallbacks, "completion": completion,
-                               "processing_wall_seconds": (time.monotonic_ns() - processing_start_ns) / 1e9},
-                              stream, indent=2, allow_nan=False)
-            session = getattr(self, "observation_session", None)
-            if session is not None and completion == "end_of_stream":
-                summary = session.finish(self.speech_result or {},
-                                         self.config["observation_integration"].get("asr_backend", "whisper"))
-                timing['envelope_ready_ns'] = time.monotonic_ns()
-                self.logger.info("Observation integration: %s; backend health: %s; speaker verified: 0",
-                                 summary["observations_by_kind"], summary["backend_health"])
-                cooperative = self.config.get("cooperative_ai", {})
-                if cooperative.get("enabled", False):
-                    self.analyze_saved_observations(self.output_dir / "observation_envelope_v1.json",
-                                                   self.output_dir / "cooperative_ai", cooperative)
+                    with (self.output_dir / "video_summary.json").open("w", encoding="utf-8") as stream:
+                        json.dump({"schema_version": 1, "source": str(video_source),
+                                   "source_kind": "file" if is_file else "capture",
+                                   "timeline_origin_ns": origin_ns,
+                                   "timestamp_basis": "origin_plus_media_pts" if is_file else "capture_monotonic",
+                                   "fps": fps if is_file else None, "frames_read": index,
+                                   "frames_processed": self.frame_count,
+                                   "processed_until_ns": processed_until_ns,
+                                   "pts_fallback_count": pts_fallbacks, "completion": completion,
+                                   "processing_wall_seconds": (time.monotonic_ns() - processing_start_ns) / 1e9},
+                                  stream, indent=2, allow_nan=False)
+                session = getattr(self, "observation_session", None)
+                if session is not None and completion == "end_of_stream":
+                    summary = session.finish(self.speech_result or {},
+                                             self.config["observation_integration"].get("asr_backend", "whisper"))
+                    timing['envelope_ready_ns'] = time.monotonic_ns()
+                    self.logger.info("Observation integration: %s; backend health: %s; speaker verified: 0",
+                                     summary["observations_by_kind"], summary["backend_health"])
+                    cooperative = self.config.get("cooperative_ai", {})
+                    if cooperative.get("enabled", False):
+                        self.analyze_saved_observations(self.output_dir / "observation_envelope_v1.json",
+                                                       self.output_dir / "cooperative_ai", cooperative)
+            if getattr(self, 'defer_window_finish', False) and completion == 'end_of_stream':
+                self.deferred_finish = finish_window
+            else:
+                finish_window()
 
     @staticmethod
     def analyze_saved_observations(envelope_path, output_dir, configuration):

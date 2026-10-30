@@ -86,6 +86,8 @@ def asr_energy_limits(gate, history):
     occasional speech does not lift it) and stay capped below speech levels.
     """
     limits = {'rms_below': gate['rms_below'], 'peak_below': gate['peak_below'], 'basis': 'absolute'}
+    if gate.get('activity'):
+        limits['activity'] = dict(gate['activity'])
     adaptive = gate.get('adaptive')
     if not adaptive or len(history) < adaptive.get('minimum_windows', 10):
         return limits
@@ -109,7 +111,7 @@ def perception_summary(folder):
     gate = integration/'asr_energy_gate.json'
     if gate.exists():
         value = json.loads(gate.read_text(encoding='utf-8'))
-        summary['asr_energy_gate'] = {k: value.get(k) for k in ('skipped', 'rms', 'peak', 'rms_below', 'peak_below')}
+        summary['asr_energy_gate'] = {k: value.get(k) for k in ('skipped', 'policy', 'active_seconds', 'rms', 'peak', 'rms_below', 'peak_below')}
         summary['asr_energy_gate']['basis'] = value.get('limits_basis', {}).get('basis')
     for audit in sorted(integration.glob('*_client_audit.json')):
         reply = json.loads(audit.read_text(encoding='utf-8'))[-1]
@@ -203,7 +205,14 @@ def encode_window(window, output):
     return manifest
 
 
-def process_window(manifest_path, config_path, *, runtime=None):
+def process_window(manifest_path, config_path, *, runtime=None, defer=False):
+    """Process one closed window.
+
+    With ``defer`` the frame loop runs now and the remainder (waiting on this
+    window's workers, the envelope and ARA) is returned as a callable, so the
+    owner can start the next window's frame loop meanwhile.  Otherwise it runs
+    to completion and returns None.
+    """
     import yaml
     if runtime is None:
         import tensorflow as tf
@@ -229,13 +238,35 @@ def process_window(manifest_path, config_path, *, runtime=None):
     app_config.write_text(yaml.safe_dump(config), encoding='utf-8')
     started = time.monotonic_ns()
     app = runtime.new_app(app_config) if runtime is not None else MultiModalEmotionApp(str(app_config))
-    try:
-        app.run(video_file=manifest['video'], audio_file=manifest['audio_file'])
-    finally:
+    app.defer_window_finish = defer and runtime is not None
+    def release():
         session = getattr(app,'observation_session',None)
         if session is not None and hasattr(session,'close'): session.close()
         if runtime is None:
             app.emotion_detector.face_model.close()
+    try:
+        app.run(video_file=manifest['video'], audio_file=manifest['audio_file'])
+    except BaseException:
+        release()
+        raise
+    deferred = getattr(app, 'deferred_finish', None)
+    def finish():
+        try:
+            if deferred is not None:
+                deferred()
+        finally:
+            release()
+        complete_window(manifest_path, manifest, output, live, cooperative, started)
+    if deferred is not None:
+        write(Path(manifest_path).parent/'frames_done.json',
+              {'window_id': manifest['window_id'], 'frames_done_ns': time.monotonic_ns()})
+        return finish
+    finish()
+    return None
+
+
+def complete_window(manifest_path, manifest, output, live, cooperative, started):
+    from modules.driver_response_policy import run_saved_observations
     envelope = output/'observation_envelope_v1.json'
     # Additional metadata cannot turn a batch worker's offline mode into live.
     data = json.loads(envelope.read_text())
@@ -592,49 +623,72 @@ def run_live(configuration):
 
     def consume_windows(owned):
         completed = 0
-        process = owned.get('process')
-        while not inference_stop.is_set():
-            window = queue.get()
-            if window is None:
-                break
+        persistent = live.get('persistent_windows', False)
+        # Overlap needs the persistent runtime; it sends one window ahead at most.
+        overlap = persistent and live.get('cross_window_overlap', False)
+        state = {'process': owned.get('process')}
+
+        def dispatch(window, *, ahead=False):
+            """Encode and send one window; None if expired, 'capture_only' to stop."""
             now = time.monotonic_ns()
             if now-window['interval_ns'][1] > live.get('window_max_queue_age_seconds', 8)*1e9:
                 emit({'event':'input_gap','window_id':window['window_id'],'reason':'queued_window_expired'})
-                continue
+                return None
             folder = output/'windows'/window['window_id']
-            try:
-                with lock: shared['status'] = '実入力窓の知覚・ARA診断を処理中（遅延あり）'
-                manifest = encode_window(window, folder)
-                retention = purge_processed_windows(
-                    output/'windows', int(live.get('processed_window_retention', 3)))
-                write(output/'processed_window_retention.json', retention)
-                for removed in retention['removed']:
-                    emit({'event': 'processed_window_purged', **removed,
-                          'policy': retention['policy']})
-                del window
+            with lock: shared['status'] = '実入力窓の知覚・ARA診断を処理中（遅延あり）'
+            manifest = encode_window(window, folder)
+            retention = purge_processed_windows(
+                output/'windows', int(live.get('processed_window_retention', 3)))
+            write(output/'processed_window_retention.json', retention)
+            for removed in retention['removed']:
+                emit({'event': 'processed_window_purged', **removed,
+                      'policy': retention['policy']})
+            if not ahead:
+                # A window sent ahead must not hide the result still due before it.
                 with lock:
                     shared['visual_result'] = dict(state='processing', window_id=manifest['window_id'],
                                                    source_end_ns=manifest['interval_ns'][1])
-                emit({'event': 'processing_started', 'window_id': manifest['window_id']})
-                if live.get('capture_only', False):
-                    emit({'event': 'capture_window_verified', 'window_id': manifest['window_id'],
-                          'native_mux_verified': manifest['native_mux_verified']})
-                    inference_stop.set()
-                    queue.close()
-                    with lock: shared['status'] = 'カメラ・マイクのnative窓保存を検証。ライブ表示継続中'
-                    break
-                persistent = live.get('persistent_windows', False)
-                with lock:
-                    request_config = window_configuration(config, interaction, folder,
-                                                          manifest.get('asr_energy_gate'))
-                if not persistent or process is None:
-                    process = launch_runtime(owned, config_path if persistent else request_config,
-                                             persistent=persistent, folder=folder)
-                if persistent:
-                    process.stdin.write((json.dumps({'manifest':str(folder/'capture_manifest.json'),
-                        'config':str(request_config)})+'\n').encode())
-                    process.stdin.flush()
-                deadline = time.monotonic()+live.get('worker_deadline_seconds', 600)
+            emit({'event': 'processing_started', 'window_id': manifest['window_id'], 'sent_ahead': ahead})
+            if live.get('capture_only', False):
+                emit({'event': 'capture_window_verified', 'window_id': manifest['window_id'],
+                      'native_mux_verified': manifest['native_mux_verified']})
+                inference_stop.set()
+                queue.close()
+                with lock: shared['status'] = 'カメラ・マイクのnative窓保存を検証。ライブ表示継続中'
+                return 'capture_only'
+            with lock:
+                request_config = window_configuration(config, interaction, folder,
+                                                      manifest.get('asr_energy_gate'))
+            process = state['process']
+            if not persistent or process is None:
+                process = launch_runtime(owned, config_path if persistent else request_config,
+                                         persistent=persistent, folder=folder)
+                state['process'] = process
+            if persistent:
+                process.stdin.write((json.dumps({'manifest':str(folder/'capture_manifest.json'),
+                    'config':str(request_config)})+'\n').encode())
+                process.stdin.flush()
+            return {'folder': folder, 'manifest': manifest,
+                    'deadline': time.monotonic()+live.get('worker_deadline_seconds', 600)}
+
+        ahead = None
+        while not inference_stop.is_set():
+            folder = None
+            try:
+                if ahead is None:
+                    window = queue.get()
+                    if window is None:
+                        break
+                    current = dispatch(window)
+                    del window
+                    if current is None:
+                        continue
+                    if current == 'capture_only':
+                        break
+                else:
+                    current, ahead = ahead, None
+                folder, manifest, deadline = current['folder'], current['manifest'], current['deadline']
+                process = state['process']
                 adopted_production = False
                 adopted_speech = False
                 adopted_visual = False
@@ -649,6 +703,14 @@ def run_live(configuration):
                     emit({'event': 'visual_observations_available', **visual})
 
                 while True:
+                    if (overlap and ahead is None and not inference_stop.is_set()
+                            and (folder/'frames_done.json').exists()):
+                        waiting = queue.get_nowait()
+                        if waiting is not None:
+                            sent = dispatch(waiting, ahead=True)
+                            del waiting
+                            if isinstance(sent, dict):
+                                ahead = sent
                     if not adopted_visual and (folder/'app/production_10s/compact_observations.json').exists():
                         try: publish_visual()
                         except (ValueError, KeyError, OSError, TypeError): pass
@@ -722,7 +784,8 @@ def run_live(configuration):
                         stop.set()
                     break
             except Exception as error:
-                emit({'event': 'window_failure', 'error': f'{type(error).__name__}: {error}', 'window': str(folder)})
+                emit({'event': 'window_failure', 'error': f'{type(error).__name__}: {error}', 'window': str(folder),
+                      'window_sent_ahead': ahead['manifest']['window_id'] if isinstance(ahead, dict) else None})
                 with lock:
                     shared['status'] = '処理失敗。入力は継続中：'+str(error)
                     if shared.get('visual_result'):

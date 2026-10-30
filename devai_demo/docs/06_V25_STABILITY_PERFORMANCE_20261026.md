@@ -313,3 +313,20 @@ ARA文は『必要な案内だけ表示します。』などいろいろ出る�
 
 結論：窓1件の処理（SenseVoice約6.5秒が下限）が4秒窓より長い限り、連続発話で待ちが生じる。
 次の構造的な候補は、窓をまたいだASRとVisualの並行処理、または発話窓のみASRを実行しVisualを軽量化して窓処理を4秒以下にすること。
+
+### 2026-10-30 23:30 (e)持続音ゲート＋(d)窓をまたいだ並行処理（本人承認「e → dで良いです」）
+
+(e) 無音窓判定を「音の持続時間」に変更した。20ms frameのRMSが max(0.012, 窓内20パーセンタイル×2) を超える
+時間の合計が0.25秒未満なら、SenseVoiceを呼ばない（`policy: skip_sensevoice_without_sustained_sound`、
+`active_seconds`を窓ごとに記録）。回収済み保持窓の音声で信号処理のみ検算：発話窓0.42～1.64秒、
+無音・物音窓0～0.10秒（peak 0.18の物音を含む）。基板の案内音声を拾った窓（ASR「必要な案内だけを表示します」）も
+0.06秒で省略対象。
+
+(d) `live.cross_window_overlap: true`。常駐runtimeは窓Nのフレームループ（約2秒）後、残り（worker応答待ち・
+統合・ARA）を1本の背景threadで実行し、その間に窓N+1のフレームループを開始する。背景threadは同時に1本までで、
+窓N+1の残り処理の前に必ずjoinする。consumerは窓Nの`frames_done.json`を見て次の1窓だけ先送りする
+（`processing_started.sent_ahead: true`）。同時に処理中の窓は最大2、各backendのworker要求は実行1＋待ち1に収まる。
+設定をfalseにすれば従来の逐次処理に戻る。
+
+配備：doctor ok、bad_hashes 0、ARA ready、空き216,031,232 bytes、変更ファイルhash一致、実機Python 3.12でcompile確認。
+**効果・安定性は未計測**（本人実入力で確認する）。

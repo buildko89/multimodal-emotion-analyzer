@@ -84,6 +84,8 @@ p=Path({self.remote!r})
             ara_response='non_blocking_exact_input_cache_with_30s_background_generation',
             visual_display_before_ara=True,
             visual_stride=5,
+            asr_activity_gate=dict(frame_seconds=0.02, frame_rms_min=0.012, floor_ratio=2.0, min_active_seconds=0.25),
+            cross_window_overlap='next_window_frame_loop_during_previous_finish_max_two_in_flight',
             resident_qwen_companion_dialogue=True,
             user_preparation_reply_required=True,
             created_utc=datetime.now(timezone.utc).isoformat()

@@ -5,6 +5,7 @@ from pathlib import Path
 import shutil
 import signal
 import sys
+import threading
 import time
 import uuid
 
@@ -130,6 +131,20 @@ def serve_windows(config_path):
         raise KeyboardInterrupt('owned_window_runtime_stopped')
     signal.signal(signal.SIGTERM, terminate)
     runtime = LiveWindowRuntime(config, WORKSPACE, REPO)
+    # Cross-window overlap: window N's remaining work (worker replies, envelope,
+    # ARA) runs in one background thread while window N+1's frame loop runs.
+    # At most one such thread exists, and it is joined before the next starts.
+    overlap = bool(config['live'].get('cross_window_overlap', False))
+    pending = {'thread': None, 'errors': []}
+    def join_pending():
+        thread = pending['thread']
+        if thread is None:
+            return
+        thread.join()
+        pending['thread'] = None
+        runtime.purge_worker_requests()
+        if pending['errors']:
+            raise pending['errors'][0]
     try:
         if config['live'].get('startup_preparation'):
             from modules.live_preparation import prepare_runtime
@@ -143,7 +158,21 @@ def serve_windows(config_path):
             request_config = Path(request['config']).resolve() if 'config' in request else Path(config_path)
             if 'config' in request and (request_config.parent != manifest.parent or request_config.name != 'processing_config.json'):
                 raise ValueError('window_config_outside_owned_window')
-            process_window(manifest, request_config, runtime=runtime)
-            runtime.purge_worker_requests()
+            finish = process_window(manifest, request_config, runtime=runtime, defer=overlap)
+            join_pending()
+            if finish is None:
+                runtime.purge_worker_requests()
+                continue
+            def run(finish=finish, errors=pending['errors']):
+                try:
+                    finish()
+                except BaseException as error:
+                    errors.append(error)
+            pending['thread'] = threading.Thread(target=run, name='window-finish')
+            pending['thread'].start()
+        join_pending()
     finally:
+        thread = pending['thread']
+        if thread is not None:
+            thread.join(timeout=60)
         runtime.close()

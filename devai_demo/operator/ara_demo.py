@@ -189,7 +189,9 @@ def build_from_release(source_name):
                                  'visual_display_before_ara',
                                  'noise_floor_relative_asr_energy_gate',
                                  'pre_arm_noise_floor_and_window_summary_events',
-                                 'visual_stride_5'],
+                                 'visual_stride_5',
+                                 'sustained_sound_asr_gate',
+                                 'cross_window_overlap'],
         'files':{p.relative_to(package).as_posix():hashlib.sha256(p.read_bytes()).hexdigest()
                  for p in package.rglob('*') if p.is_file() and p!=package/'manifest.json'}}
     (package/'manifest.json').write_text(json.dumps(candidate,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')

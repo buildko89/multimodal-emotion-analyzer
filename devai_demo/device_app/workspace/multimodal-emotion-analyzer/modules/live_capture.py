@@ -134,6 +134,15 @@ class SpeechPriorityWindowQueue:
             self.pending.remove(selected)
             return selected
 
+    def get_nowait(self):
+        """Same selection as get(), or None at once if nothing is pending or closed."""
+        with self.condition:
+            if self.closed or not self.pending:
+                return None
+            selected = max(self.pending, key=lambda item: (self._energy(item), self._end(item)))
+            self.pending.remove(selected)
+            return selected
+
     def close(self):
         with self.condition:
             self.closed = True

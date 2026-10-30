@@ -170,6 +170,13 @@
   "live": {
     "ara_startup_warmup": false,
     "asr_energy_gate": {
+      "activity": {
+        "floor_quantile": 0.2,
+        "floor_ratio": 2.0,
+        "frame_rms_min": 0.012,
+        "frame_seconds": 0.02,
+        "min_active_seconds": 0.25
+      },
       "adaptive": {
         "floor_quantile": 0.2,
         "history_windows": 30,
@@ -185,6 +192,7 @@
     },
     "camera": "/dev/v4l/by-id/usb-046d_0825_D9E9EBE0-video-index0",
     "capture_only": false,
+    "cross_window_overlap": true,
     "diagnostic_replay": false,
     "diagnostic_seconds": 120,
     "duration_seconds": 86400,

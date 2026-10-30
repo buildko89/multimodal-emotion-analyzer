@@ -230,10 +230,24 @@ class ObservationIntegrationSession:
         signal = np.frombuffer(pcm, dtype='<i2').astype(np.float64) / 32768
         rms = float(np.sqrt(np.mean(signal ** 2)))
         peak = float(np.max(np.abs(signal)))
-        return {'policy': 'skip_sensevoice_when_rms_and_peak_below', 'rms': rms, 'peak': peak,
-                'rms_below': limits[0], 'peak_below': limits[1],
-                'limits_basis': {k: v for k, v in gate.items() if k not in ('rms_below', 'peak_below')},
-                'skipped': rms < limits[0] and peak < limits[1], 'speech_verified': False}
+        record = {'policy': 'skip_sensevoice_when_rms_and_peak_below', 'rms': rms, 'peak': peak,
+                  'rms_below': limits[0], 'peak_below': limits[1],
+                  'limits_basis': {k: v for k, v in gate.items() if k not in ('rms_below', 'peak_below', 'activity')},
+                  'skipped': rms < limits[0] and peak < limits[1], 'speech_verified': False}
+        activity = gate.get('activity')
+        if activity:
+            # Speech is sustained; knocks and clicks raise the peak for only a few frames.
+            frame = round(activity['frame_seconds'] * 16000)
+            frames = signal[:len(signal) // frame * frame].reshape(-1, frame)
+            frame_rms = np.sqrt(np.mean(frames ** 2, axis=1))
+            floor = float(np.quantile(frame_rms, activity['floor_quantile'])) if frame_rms.size else 0.0
+            threshold = max(activity['frame_rms_min'], floor * activity['floor_ratio'])
+            active = float(np.count_nonzero(frame_rms > threshold) * frame / 16000)
+            record.update(policy='skip_sensevoice_without_sustained_sound', frame_floor=floor,
+                          frame_threshold=threshold, active_seconds=active,
+                          min_active_seconds=activity['min_active_seconds'],
+                          skipped=active < activity['min_active_seconds'])
+        return record
 
     def asr_skipped(self, backend):
         return backend == 'sensevoice' and bool((self.asr_energy_gate or {}).get('skipped'))
