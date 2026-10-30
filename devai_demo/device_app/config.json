@@ -175,7 +175,8 @@
         "floor_ratio": 2.0,
         "frame_rms_min": 0.012,
         "frame_seconds": 0.02,
-        "min_active_seconds": 0.25
+        "min_active_seconds": 0.25,
+        "crop_margin_seconds": 0.3
       },
       "adaptive": {
         "floor_quantile": 0.2,

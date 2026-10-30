@@ -116,7 +116,7 @@ def perception_summary(folder):
     gate = integration/'asr_energy_gate.json'
     if gate.exists():
         value = json.loads(gate.read_text(encoding='utf-8'))
-        summary['asr_energy_gate'] = {k: value.get(k) for k in ('skipped', 'policy', 'active_seconds', 'rms', 'peak', 'rms_below', 'peak_below')}
+        summary['asr_energy_gate'] = {k: value.get(k) for k in ('skipped', 'policy', 'active_seconds', 'rms', 'peak', 'rms_below', 'peak_below', 'asr_sample_interval')}
         summary['asr_energy_gate']['basis'] = value.get('limits_basis', {}).get('basis')
     for audit in sorted(integration.glob('*_client_audit.json')):
         reply = json.loads(audit.read_text(encoding='utf-8'))[-1]

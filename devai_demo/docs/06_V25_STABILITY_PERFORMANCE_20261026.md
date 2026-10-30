@@ -358,3 +358,21 @@ ARA文は『必要な案内だけ表示します。』などいろいろ出る�
   保持数は完了3窓＋処理中最大2窓で有界。
 - 今回sessionは失敗が開始約20秒で起きたため、性能値の比較には使わない。
 - 再配備：doctor ok、bad_hashes 0、ARA ready、空き215,924,736 bytes、hash一致、実機compile ok。
+
+### 2026-10-31 Visual workerの常駐化とSenseVoiceの発話区間入力（本人承認「案2,4はOKです。手の認識は間引かないでください。」）
+
+根拠（回収済み`..._231357_v25_perf_live4`のログ読解のみ。新しい録音・推論なし）：
+- フレームループ（Neutron）は約1.8～2.5秒で終わるが、Visual worker（MediaPipe Face＋Hand Landmarker、CPU）は
+  4.3～11.2秒で29窓中28窓が4秒超。無音窓でもfusion完了→envelope完成に最大8秒待ち、次窓の開始が2～6.5秒遅れた。
+- Visual workerは常駐processなのに、窓ごとにHand modelのSHA256、Face bundleのSHA256、両graphの生成を行っていた。
+- 発話窓の持続音は0.44～1.24秒／4秒窓。SenseVoiceは毎回4秒全体を処理していた。
+
+変更：
+- 案2：Visual workerはprocess内で1回だけ両modelを検証・生成し、以後の窓で再利用する。Face LandmarkerのVIDEO graphは
+  窓ごとに時刻0から始まるため、graph内部の時刻だけ前窓末尾＋1秒のoffsetを加える（記録する`timestamp_ms`は窓内時刻のまま、
+  `graph_timestamp_ms`を併記）。窓の処理が失敗した場合はgraphを破棄し次窓で作り直す。手の認識は従来どおり全推論frameで実行。
+  `visual_summary.json`に`worker_models`（reused、setup_seconds、calls）を記録。
+- 案4：`asr_energy_gate.activity.crop_margin_seconds: 0.3`。持続音ゲートで閾値を超えた最初～最後のframeに前後0.3秒を加えた
+  区間だけをSenseVoiceへ渡す（emotion2vec等は窓全体のまま）。区間は`asr_energy_gate.json`／`window_perception_summary`の
+  `asr_sample_interval`に記録。設定を外せば従来の4秒全体入力に戻る。
+- PC上では切り出し区間の算術（合成信号1.0～2.0秒→0.7～2.3秒、hash一致）だけを確認した。効果・認識への影響は実機で未計測。

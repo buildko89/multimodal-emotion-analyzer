@@ -41,7 +41,8 @@ class FaceLandmarkerAdapter:
     def close(self):
         self.detector.close()
 
-    def analyze(self, rgb, *, asset_id, timestamp_s):
+    def analyze(self, rgb, *, asset_id, timestamp_s, graph_offset_ms=0):
+        """graph_offset_ms keeps a reused VIDEO graph monotonic across recordings."""
         received = time.perf_counter()
         result = {"schema": "driver-observation-v0.1", "asset_id": asset_id, "mode": "offline",
                   "frame_time_s": timestamp_s if isinstance(timestamp_s, (int, float)) and math.isfinite(timestamp_s) else None,
@@ -61,10 +62,12 @@ class FaceLandmarkerAdapter:
             return finish("invalid_input", "expected_rgb_uint8")
         if result["frame_time_s"] is None or timestamp_s < 0:
             return finish("invalid_input", "invalid_frame_time")
-        ms = round(timestamp_s*1000)
+        ms = round(timestamp_s*1000) + graph_offset_ms
         if self.last_timestamp_ms is not None and ms <= self.last_timestamp_ms:
             return finish("invalid_input", "nonincreasing_quantized_frame_time")
-        result["timestamp_ms"] = ms
+        result["timestamp_ms"] = ms - graph_offset_ms
+        if graph_offset_ms:
+            result["graph_timestamp_ms"] = ms
         self.last_timestamp_ms = ms
         try:
             raw = self.detector.detect_for_video(mp.Image(image_format=mp.ImageFormat.SRGB, data=np.ascontiguousarray(rgb)), ms)

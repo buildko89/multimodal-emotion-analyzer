@@ -196,6 +196,7 @@ class ObservationIntegrationSession:
         self.media_end = end / 16000 + original_offset
         self.samples = end - begin
         self.pcm_sha = hashlib.sha256(pcm).hexdigest()
+        self.pcm = pcm
         self.common_audio = self.directory / 'common_audio.wav'
         with wave.open(str(self.common_audio), 'wb') as stream:
             stream.setparams((1, 2, 16000, 0, 'NONE', 'not compressed'))
@@ -242,12 +243,32 @@ class ObservationIntegrationSession:
             frame_rms = np.sqrt(np.mean(frames ** 2, axis=1))
             floor = float(np.quantile(frame_rms, activity['floor_quantile'])) if frame_rms.size else 0.0
             threshold = max(activity['frame_rms_min'], floor * activity['floor_ratio'])
-            active = float(np.count_nonzero(frame_rms > threshold) * frame / 16000)
+            loud = np.flatnonzero(frame_rms > threshold)
+            active = float(loud.size * frame / 16000)
             record.update(policy='skip_sensevoice_without_sustained_sound', frame_floor=floor,
                           frame_threshold=threshold, active_seconds=active,
                           min_active_seconds=activity['min_active_seconds'],
                           skipped=active < activity['min_active_seconds'])
+            margin = activity.get('crop_margin_seconds')
+            if margin is not None and loud.size and not record['skipped']:
+                # SenseVoice time grows with input length; pass only the sounding span.
+                if isinstance(margin, bool) or not isinstance(margin, (int, float)) or not 0 <= margin <= 2:
+                    raise ValueError('asr_crop_margin_out_of_range')
+                pad = round(margin * 16000)
+                record['asr_sample_interval'] = [max(0, int(loud[0]) * frame - pad),
+                                                 min(len(signal), (int(loud[-1]) + 1) * frame + pad)]
+                record['asr_crop_margin_seconds'] = margin
         return record
+
+    def asr_samples(self, backend):
+        """SenseVoice may receive the sounding span only; other backends get the window."""
+        span = (self.asr_energy_gate or {}).get('asr_sample_interval')
+        return span if backend == 'sensevoice' and span else [0, self.samples]
+
+    def span_sha(self, samples):
+        if samples == [0, self.samples]:
+            return self.pcm_sha
+        return hashlib.sha256(self.pcm[samples[0] * 2:samples[1] * 2]).hexdigest()
 
     def asr_skipped(self, backend):
         return backend == 'sensevoice' and bool((self.asr_energy_gate or {}).get('skipped'))
@@ -292,7 +313,11 @@ class ObservationIntegrationSession:
             return reply
         executable = self.config['visual_python' if backend == 'visual' else 'audio_python']
         script = REPO / 'scripts/observation_worker.py'
-        interval = [0.0, self.duration] if backend == 'visual' else [self.media_begin, self.media_end]
+        if backend == 'visual':
+            interval = [0.0, self.duration]
+        else:
+            samples = self.asr_samples(backend)
+            interval = [samples[0] / 16000 + self.media_begin, samples[1] / 16000 + self.media_begin]
         from contextlib import nullcontext
         pooled = self.clients is not None and backend in self.clients
         context = nullcontext(self.clients[backend]) if pooled else SubprocessObservationClient(
@@ -307,7 +332,7 @@ class ObservationIntegrationSession:
                     2 if self.config.get('parallel_backends',False) else 4))
                 if isinstance(thread_count, bool) or not isinstance(thread_count, int) or not 1 <= thread_count <= 6:
                     raise ValueError('audio_torch_threads_out_of_range')
-                payload.update(sample_interval=[0, self.samples], pcm_sha256=self.pcm_sha,
+                payload.update(sample_interval=samples, pcm_sha256=self.span_sha(samples),
                                audio_offset_seconds=self.media_begin, torch_num_threads=thread_count)
             reply = client.submit(self.video if backend == 'visual' else self.common_audio, interval,
                                   timeout_s=self.config.get('worker_timeout_seconds', 120),
@@ -348,9 +373,10 @@ class ObservationIntegrationSession:
                     'reason': reply['reason'], 'asr_backend': 'sensevoice'}
         raw = read_json(reply['artifacts'][0]['resolved_path'])['observation']
         text = raw['observations'][0]['asr_text']
+        begin, end = self.asr_samples('sensevoice')
         return {'text': text, 'language': 'ja', 'status': 'observed', 'asr_backend': 'sensevoice',
                 'segment_time_precision': 'whole_input_interval_no_token_times',
-                'segments': [{'start': 0.0, 'end': self.samples / 16000, 'text': text,
+                'segments': [{'start': begin / 16000, 'end': end / 16000, 'text': text,
                               'words': [], 'time_precision': 'whole_input_interval'}] if text else []}
 
     def finish(self, speech_result, asr_backend):
@@ -442,9 +468,11 @@ class ObservationIntegrationSession:
                 continue
             path = Path(reply['artifacts'][0]['resolved_path'])
             raw = read_json(path)
-            if raw['pcm_sha256'] != self.pcm_sha or raw['sample_interval'] != [0, self.samples]:
+            samples = self.asr_samples(backend)
+            if raw['pcm_sha256'] != self.span_sha(samples) or raw['sample_interval'] != samples:
                 raise ValueError('Audio backend common input mismatch')
-            ident = register(path, f'audio.{backend}', [self.media_begin, self.media_end], json_path=['observation'])
+            ident = register(path, f'audio.{backend}', [samples[0] / 16000 + self.media_begin,
+                             samples[1] / 16000 + self.media_begin], json_path=['observation'])
             native = raw['observation']
             observation('acoustic_emotion', backend, native['observations'], [ident],
                         quality={'status': 'reported', 'value': native['quality']},
