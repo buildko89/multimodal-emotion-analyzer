@@ -22,7 +22,7 @@ def inventory(root):
             bytes=p.stat().st_size) for p in root.rglob('*') if p.is_file()}
 
 
-def offload(release, session, trial, destination, allow_error=False):
+def offload(release, session, trial, destination, allow_error=False, allow_unrecorded_worker_exit=False):
     demo.select_release(release)
     assert session and session.replace('_', '').isalnum()
     trial = trial.resolve(); destination = destination.resolve()
@@ -38,7 +38,10 @@ def offload(release, session, trial, destination, allow_error=False):
     if proof.get('mode') == 'framebuffer_render_only':
         assert proof['new_recording_windows'] == 0 and proof['model_inferences'] == 0
     else:
-        assert proof['all_owned_processes_exited'] and proof['workers_exited'] and not proof['cleanup_errors']
+        # A runtime killed at stop writes no worker record (None, never False); the
+        # device scan below still refuses any remaining observation_worker process.
+        workers = proof['workers_exited'] or (allow_unrecorded_worker_exit and proof['workers_exited'] is None)
+        assert proof['all_owned_processes_exited'] and workers and not proof['cleanup_errors']
         assert all(proof['threads_stopped'].values())
     destination.mkdir(exist_ok=False)
     restore = destination / 'restore_sandbox/1'
@@ -97,7 +100,9 @@ for q in sorted([q for q in p.rglob('*') if q.is_dir()],key=lambda q:len(q.parts
 assert sorted(q.name for q in p.iterdir())==['OFFLOADED_TO_PC.json']
 print(json.dumps(dict(offloaded_files=len(expected),free_bytes=shutil.disk_usage('/').free)))
 ''', 'offload_complete')['stdout'])
-    demo.save(destination / 'offload_result.json', dict(**value, free_before_bytes=before['free_bytes']))
+    demo.save(destination / 'offload_result.json', dict(**value, free_before_bytes=before['free_bytes'],
+        workers_exited_recorded=proof.get('workers_exited'),
+        unrecorded_worker_exit_allowed=allow_unrecorded_worker_exit))
     print(json.dumps(value))
 
 
@@ -109,5 +114,8 @@ if __name__ == '__main__':
     parser.add_argument('--trial', required=True, type=Path)
     parser.add_argument('--destination', required=True, type=Path)
     parser.add_argument('--allow-error', action='store_true', help='Allow offloading sessions stopped with a recorded error')
+    parser.add_argument('--allow-unrecorded-worker-exit', action='store_true',
+                        help='Accept workers_exited=null when the runtime was killed at stop; the device process scan still applies')
     args = parser.parse_args()
-    offload(args.release, args.session, args.trial, args.destination, allow_error=args.allow_error)
+    offload(args.release, args.session, args.trial, args.destination, allow_error=args.allow_error,
+            allow_unrecorded_worker_exit=args.allow_unrecorded_worker_exit)

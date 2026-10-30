@@ -376,3 +376,22 @@ ARA文は『必要な案内だけ表示します。』などいろいろ出る�
   区間だけをSenseVoiceへ渡す（emotion2vec等は窓全体のまま）。区間は`asr_energy_gate.json`／`window_perception_summary`の
   `asr_sample_interval`に記録。設定を外せば従来の4秒全体入力に戻る。
 - PC上では切り出し区間の算術（合成信号1.0～2.0秒→0.7～2.3秒、hash一致）だけを確認した。効果・認識への影響は実機で未計測。
+
+### 2026-10-31 7回目（`demo_continuous_20261031_082609_v25_perf_live7`）：案2・案4の実測
+
+開始前「実測はできます。」、ready後「はい。話せます」を別々に受けてarm。録音は約59秒（閉窓14件）。162 files／20,160,942 bytesを
+全hash一致で回収し、3コピーoffload（停止時にwindow runtimeがSIGKILLされ`workers_exited`が未記録になったため、
+offloadに`--allow-unrecorded-worker-exit`を追加。実機のprocess走査で`observation_worker.py`の残存なしを確認する条件は維持）。
+
+- 処理窓／閉窓：12/14（86%、4回目67%）。次窓の開始待ち：全窓0秒（4回目2～6.5秒）。
+- Visual worker：3.4～5.4秒（4回目4.3～11.2秒）。`worker_models.reused: true`、準備0秒。
+- 窓確定→画像表示：7.0～12.8秒（4回目10.0～23.5秒）。窓確定→字幕：8.9／7.5秒（4回目10.1～17.5秒）。
+- SenseVoice：5.7秒（入力1.96秒）／4.9秒（入力1.18秒）。4回目6.3～9.6秒（入力4秒）。入力長に比べて短縮幅が小さく、固定費が大きい。
+- 認識：「今日はいい天気ですね」「こんにちは」。
+- **退行**：保持窓live_000005で、NPU（BlazeFace）は40フレームすべてで顔1件を検出したのに、MediaPipe Face Landmarkerは
+  前半20フレーム（約2秒）が`face_unavailable`だった。3回目・4回目の保持窓は全フレーム`ok`。窓をまたいでVIDEO graphを
+  再利用した（時刻offset付き）ことが原因と判断した。最終表示でも「画像結果は不明」が出た。
+- 停止時：live_000013の画像処理が途中（14/40フレーム）で停止要求を受けた。window_failureは停止時の1件だけ。
+
+修正：Face LandmarkerのVIDEO graphは窓ごとに作り直す（`reset_graph`）。modelのhash検証は1回、Hand Landmarker（IMAGE mode）は
+引き続き再利用。graph作成時間は`worker_models.setup_seconds`に記録。方式A（SenseVoiceの動的INT8）と一緒に配備し、次回計測する。

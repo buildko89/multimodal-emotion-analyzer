@@ -99,7 +99,7 @@ class PersistentObservationClient(SubprocessObservationClient):
             raise
         if result['status'] != 'ok':
             self._stop()
-        result['worker_transport'] = {'mode': 'persistent_visual_reused_graph_v2' if self.backend_id == 'visual' else 'persistent_audio_v1',
+        result['worker_transport'] = {'mode': 'persistent_visual_fresh_face_graph_v2' if self.backend_id == 'visual' else 'persistent_audio_v1',
             'start_count': self.start_count, 'pid': self.process.pid if self.process else None}
         return result
 
@@ -111,7 +111,7 @@ class PersistentObservationClient(SubprocessObservationClient):
 
 
 class PersistentVisualClient(PersistentObservationClient):
-    """Keep imported libraries and verified VIDEO graphs warm across clips."""
+    """Keep libraries, verified models and the hand graph warm; each clip gets a fresh face VIDEO graph."""
     backends = {'visual'}
     server_argument = '--serve-visual'
 

@@ -31,18 +31,27 @@ class FaceLandmarkerAdapter:
             raise RuntimeError("Unexpected MediaPipe version")
         self.provenance = {"model_id": "MediaPipe Face Landmarker", "bundle_version": "1",
                            "weight_sha256": record["sha256"], "runtime_version": "1.0.1", "device": "cpu"}
-        options = mp.tasks.vision.FaceLandmarkerOptions(
+        self.options = mp.tasks.vision.FaceLandmarkerOptions(
             base_options=mp.tasks.BaseOptions(model_asset_path=str(model), delegate=mp.tasks.BaseOptions.Delegate.CPU),
             running_mode=mp.tasks.vision.RunningMode.VIDEO, num_faces=2,
             output_face_blendshapes=True, output_facial_transformation_matrixes=True)
-        self.detector = mp.tasks.vision.FaceLandmarker.create_from_options(options)
+        self.detector = mp.tasks.vision.FaceLandmarker.create_from_options(self.options)
+        self.last_timestamp_ms = None
+
+    def reset_graph(self):
+        """Fresh VIDEO graph for a new recording, without re-verifying the bundle.
+
+        On the device, a graph reused across 4 s windows lost the face for the
+        first ~2 s of a window while the NPU detector saw it in every frame.
+        """
+        self.detector.close()
+        self.detector = mp.tasks.vision.FaceLandmarker.create_from_options(self.options)
         self.last_timestamp_ms = None
 
     def close(self):
         self.detector.close()
 
-    def analyze(self, rgb, *, asset_id, timestamp_s, graph_offset_ms=0):
-        """graph_offset_ms keeps a reused VIDEO graph monotonic across recordings."""
+    def analyze(self, rgb, *, asset_id, timestamp_s):
         received = time.perf_counter()
         result = {"schema": "driver-observation-v0.1", "asset_id": asset_id, "mode": "offline",
                   "frame_time_s": timestamp_s if isinstance(timestamp_s, (int, float)) and math.isfinite(timestamp_s) else None,
@@ -62,12 +71,10 @@ class FaceLandmarkerAdapter:
             return finish("invalid_input", "expected_rgb_uint8")
         if result["frame_time_s"] is None or timestamp_s < 0:
             return finish("invalid_input", "invalid_frame_time")
-        ms = round(timestamp_s*1000) + graph_offset_ms
+        ms = round(timestamp_s*1000)
         if self.last_timestamp_ms is not None and ms <= self.last_timestamp_ms:
             return finish("invalid_input", "nonincreasing_quantized_frame_time")
-        result["timestamp_ms"] = ms - graph_offset_ms
-        if graph_offset_ms:
-            result["graph_timestamp_ms"] = ms
+        result["timestamp_ms"] = ms
         self.last_timestamp_ms = ms
         try:
             raw = self.detector.detect_for_video(mp.Image(image_format=mp.ImageFormat.SRGB, data=np.ascontiguousarray(rgb)), ms)

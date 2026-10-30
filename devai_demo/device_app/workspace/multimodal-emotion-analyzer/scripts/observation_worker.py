@@ -42,9 +42,10 @@ def process_memory():
 
 
 def visual_models(models):
-    """Verify and build the face/hand graphs once per worker process.
+    """Verify both models and build the stateless hand graph once per worker process.
 
     On the device, per-window creation and model hashing ran in every 4 s window.
+    The face VIDEO graph is still rebuilt per window (see reset_graph).
     """
     import mediapipe as mp
     from face_landmarker_adapter import FaceLandmarkerAdapter
@@ -93,8 +94,10 @@ def visual(request, folder, models=None):
         raise ValueError('visual_stride_out_of_range')
     built, reused, setup_seconds = visual_models(models)
     adapter, hand_detector, hand_manifest = built['face'], built['hand'], built['hand_manifest']
-    # A reused VIDEO graph needs increasing timestamps; each recording restarts at 0.
-    graph_offset_ms = 0 if adapter.last_timestamp_ms is None else adapter.last_timestamp_ms + 1000
+    if reused:
+        reset_started = time.perf_counter()
+        adapter.reset_graph()
+        setup_seconds = time.perf_counter() - reset_started
     cap = cv2.VideoCapture(request['input_path'])
     if not cap.isOpened():
         if models is None:
@@ -117,7 +120,7 @@ def visual(request, folder, models=None):
                     face = dict(face, frame_index=len(rows), timestamp_s=pts, frame_time_s=pts, timestamp_ms=round(pts * 1000))
                     eye_risk = dict(eye_risk, frame_time_s=pts)
                 else:
-                    face = adapter.analyze(rgb, asset_id=request['clip_id'], timestamp_s=pts, graph_offset_ms=graph_offset_ms)
+                    face = adapter.analyze(rgb, asset_id=request['clip_id'], timestamp_s=pts)
                     if face['status'] == 'backend_error':
                         raise RuntimeError(face.get('error'))
                     hand_result = hand_detector.detect(mp.Image(image_format=mp.ImageFormat.SRGB, data=np.ascontiguousarray(rgb)))
@@ -143,9 +146,8 @@ def visual(request, folder, models=None):
     # No new event threshold is fitted to the three human reference labels.
     geometry = {'frame_count': len(rows), 'inference_stride': stride,
                 'inference_frames': (len(rows) + stride - 1) // stride, 'eye_events': eye_events,
-                'temporal_state': {'scope': 'worker_graph_across_windows' if reused else 'this_window_only', 'state_id': uuid.uuid4().hex,
-                                   'fresh_video_graph': not reused, 'timestamp_origin_seconds': 0,
-                                   'graph_timestamp_offset_ms': graph_offset_ms},
+                'temporal_state': {'scope': 'this_window_only', 'state_id': uuid.uuid4().hex,
+                                   'fresh_video_graph': True, 'timestamp_origin_seconds': 0},
                 'worker_models': {'reused': reused, 'setup_seconds': setup_seconds,
                                   'instance_id': built['instance_id'], 'calls': built['calls']},
                 'head_motion': {'status': 'raw_transform_only', 'nod_classifier': 'not_implemented'},
