@@ -187,7 +187,9 @@ def build_from_release(source_name):
                                  'asr_energy_gate_for_silent_live_windows',
                                  'non_blocking_ara_exact_input_cache',
                                  'visual_display_before_ara',
-                                 'noise_floor_relative_asr_energy_gate'],
+                                 'noise_floor_relative_asr_energy_gate',
+                                 'pre_arm_noise_floor_and_window_summary_events',
+                                 'visual_stride_5_and_lower_visual_priority'],
         'files':{p.relative_to(package).as_posix():hashlib.sha256(p.read_bytes()).hexdigest()
                  for p in package.rglob('*') if p.is_file() and p!=package/'manifest.json'}}
     (package/'manifest.json').write_text(json.dumps(candidate,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')

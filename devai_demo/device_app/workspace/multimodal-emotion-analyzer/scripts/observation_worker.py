@@ -4,6 +4,7 @@ from contextlib import redirect_stdout
 from dataclasses import asdict
 import json
 import math
+import os
 from pathlib import Path
 import sys
 import time
@@ -220,6 +221,9 @@ def main():
     if args.request:
         execute(args.request)
         return
+    if args.serve_visual and hasattr(os, 'nice'):
+        # SenseVoice is the live critical path; Visual normally finishes first.
+        os.nice(int(os.environ.get('ARA_VISUAL_WORKER_NICE', '5')))
     adapters = {}
     output = sys.stdout
     while True:

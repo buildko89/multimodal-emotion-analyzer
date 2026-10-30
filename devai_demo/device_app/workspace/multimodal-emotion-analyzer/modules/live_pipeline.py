@@ -102,6 +102,27 @@ def asr_energy_limits(gate, history):
     return limits
 
 
+def perception_summary(folder):
+    """Gate decision and backend timings, logged before the window can be purged."""
+    integration = Path(folder)/'app/observation_integration'
+    summary = {'window_id': Path(folder).name, 'asr_energy_gate': None, 'backends': {}}
+    gate = integration/'asr_energy_gate.json'
+    if gate.exists():
+        value = json.loads(gate.read_text(encoding='utf-8'))
+        summary['asr_energy_gate'] = {k: value.get(k) for k in ('skipped', 'rms', 'peak', 'rms_below', 'peak_below')}
+        summary['asr_energy_gate']['basis'] = value.get('limits_basis', {}).get('basis')
+    for audit in sorted(integration.glob('*_client_audit.json')):
+        reply = json.loads(audit.read_text(encoding='utf-8'))[-1]
+        summary['backends'][reply['backend_id']] = {'status': reply['status'],
+            'worker_seconds': (reply['completed_ns']-reply['started_ns'])/1e9 if 'completed_ns' in reply else None}
+    timing = Path(folder)/'app/pipeline_timing.json'
+    if timing.exists():
+        value = json.loads(timing.read_text(encoding='utf-8'))
+        summary['pipeline_seconds'] = {k[:-3]: (v-value['started_ns'])/1e9 for k, v in value.items()
+                                       if k.endswith('_ns') and k != 'started_ns'}
+    return summary
+
+
 def window_configuration(configuration, interaction, folder, energy_gate=None):
     """Freeze the exact preference revision used by a dispatched perception window."""
     config = deepcopy(configuration)
@@ -338,6 +359,25 @@ def run_live(configuration):
         frames, counter = [], 0
         energy_gate = live.get('asr_energy_gate')
         audio_history = deque(maxlen=(energy_gate or {}).get('adaptive', {}).get('history_windows', 30))
+        learn_before_arm = bool((energy_gate or {}).get('adaptive', {}).get('learn_before_arm'))
+        preview = {'last_end_ns': 0, 'samples': 0}
+        def learn_noise_floor():
+            """Loudness only, during the pre-arm wait: no audio is saved or recognized."""
+            span = int(live.get('window_seconds', 3) * 1e9)
+            now = time.monotonic_ns()
+            end = now - 500_000_000
+            if end - preview['last_end_ns'] < span:
+                return
+            try:
+                audio = ring.slice(end - span, end, now)
+            except ValueError:
+                return
+            signal_value = np.frombuffer(audio['pcm'], dtype='<i2').astype(np.float32) / 32768
+            if signal_value.size:
+                audio_history.append((float(np.sqrt(np.mean(signal_value ** 2))),
+                                      float(np.max(np.abs(signal_value)))))
+                preview['samples'] += 1
+            preview['last_end_ns'] = end
         from modules.live_capture import ManualCaptureGate
         gate = ManualCaptureGate() if live.get('record_on_request',False) else None
         for frame in capture_camera(stop, live.get('camera', '/dev/video4')):
@@ -359,6 +399,8 @@ def run_live(configuration):
                 command_path = output/'continuous_start_command.json'
                 if not command_path.exists():
                     with lock: shared['status'] = '準備完了。現在の発話準備確認を待っています'
+                    if learn_before_arm:
+                        learn_noise_floor()
                     frames = []
                     continue
                 command = json.loads(command_path.read_text(encoding='utf-8'))
@@ -372,6 +414,10 @@ def run_live(configuration):
                     shared['status'] = '実入力の連続取得を開始しました'
                 emit({'event':'post_ready_capture_armed','authorized_ns':authorized_ns,
                       'request_id':command.get('request_id')})
+                if energy_gate is not None:
+                    emit({'event':'asr_noise_floor_preview','samples':preview['samples'],
+                          'history_windows':len(audio_history),'audio_saved':False,
+                          'limits':asr_energy_limits(energy_gate, audio_history)})
                 frames = []
             if gate is not None:
                 command = output/'capture_command.json'
@@ -662,6 +708,11 @@ def run_live(configuration):
                     adopted = adopt_response(shared, interaction, result)
                     shared['status'] = '実入力窓のARA短文の処理完了。カメラ・マイクは取得継続中'
                 emit({'event': 'diagnostic_response_available', **result, 'display_adopted':adopted})
+                try:
+                    emit({'event': 'window_perception_summary', **perception_summary(folder)})
+                except (ValueError, KeyError, OSError, TypeError, IndexError) as error:
+                    emit({'event': 'window_perception_summary_unavailable', 'window_id': manifest['window_id'],
+                          'error': f'{type(error).__name__}: {error}'})
                 completed += 1
                 if completed >= live.get('maximum_processed_windows', 1):
                     inference_stop.set()

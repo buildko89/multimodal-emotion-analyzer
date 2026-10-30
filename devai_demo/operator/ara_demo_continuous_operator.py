@@ -79,10 +79,11 @@ p=Path({self.remote!r})
             pending_window_policy='strongest_audio_plus_latest_bounded_two',
             realtime_ser_backends=['sensevoice'],
             production_timeout_seconds=4,
-            asr_energy_gate=dict(rms_below=0.012, peak_below=0.03, adaptive='recent_noise_floor_p20x1.2_1.5_cap_0.022_0.1',
+            asr_energy_gate=dict(rms_below=0.012, peak_below=0.03, adaptive='recent_noise_floor_p20x1.2_1.5_cap_0.022_0.1_learned_before_arm_loudness_only',
                                  applies_to='live_windows_only'),
             ara_response='non_blocking_exact_input_cache_with_30s_background_generation',
             visual_display_before_ara=True,
+            visual_stride=5, visual_worker_nice=5,
             resident_qwen_companion_dialogue=True,
             user_preparation_reply_required=True,
             created_utc=datetime.now(timezone.utc).isoformat()

@@ -173,6 +173,7 @@
       "adaptive": {
         "floor_quantile": 0.2,
         "history_windows": 30,
+        "learn_before_arm": true,
         "minimum_windows": 10,
         "peak_below_cap": 0.1,
         "peak_floor_ratio": 1.5,
@@ -260,7 +261,7 @@
     ],
     "visual_python": "/root/devai_ara/ara06_recording_app_20261014_v1/app_venv/bin/python",
     "worker_mode": "online",
-    "visual_stride": 4,
+    "visual_stride": 5,
     "worker_timeout_seconds": 300
   },
   "output": {
