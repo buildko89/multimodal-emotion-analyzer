@@ -46,12 +46,18 @@ def parse_tags(text):
 
 class SenseVoiceAdapter:
     """Serial, one offline mono 16kHz interval per call; input time is asset time."""
-    def __init__(self):
+    QUANTIZATIONS = {None, "dynamic_int8_linear"}
+
+    def __init__(self, quantization=None):
+        if quantization not in self.QUANTIZATIONS:
+            raise ValueError("Unsupported SenseVoice quantization")
+        self.quantization = quantization
         self.backend = None
         self.provenance = {"model_id": "FunAudioLLM/SenseVoiceSmall", "weight_revision": REVISION,
                            "weight_sha256": WEIGHT_SHA, "weight_verified": False,
                            "runtime_version": importlib.metadata.version("funasr"),
-                           "device": "cpu", "trust_remote_code": False, "disable_update": True}
+                           "device": "cpu", "trust_remote_code": False, "disable_update": True,
+                           "quantization": quantization}
         self.load_report = None
         self.diagnostics = {}
 
@@ -103,6 +109,15 @@ class SenseVoiceAdapter:
             for i in range(tokenizer.get_vocab_size())
             if TAG_PATTERN.fullmatch(tokenizer.sp.id_to_piece(i))]
         del state
+        if self.quantization == "dynamic_int8_linear":
+            # Weights stay the verified FP32 file; Linear layers are quantized in memory only.
+            quantize_start = time.perf_counter()
+            torch.backends.quantized.engine = "qnnpack"
+            torch.ao.quantization.quantize_dynamic(backend.model, {torch.nn.Linear}, dtype=torch.qint8, inplace=True)
+            self.load_report["quantization"] = {"method": "torch.ao.quantization.quantize_dynamic",
+                                                "modules": ["torch.nn.Linear"], "dtype": "qint8",
+                                                "engine": torch.backends.quantized.engine,
+                                                "seconds": time.perf_counter() - quantize_start}
         def hook(name):
             def record(module, inputs, output):
                 tensor = output[0] if isinstance(output, tuple) else output

@@ -334,6 +334,9 @@ class ObservationIntegrationSession:
                     raise ValueError('audio_torch_threads_out_of_range')
                 payload.update(sample_interval=samples, pcm_sha256=self.span_sha(samples),
                                audio_offset_seconds=self.media_begin, torch_num_threads=thread_count)
+                quantization = self.config.get('audio_quantization_by_backend', {}).get(backend)
+                if quantization is not None:
+                    payload['quantization'] = quantization
             reply = client.submit(self.video if backend == 'visual' else self.common_audio, interval,
                                   timeout_s=self.config.get('worker_timeout_seconds', 120),
                                   mode=self.config.get('worker_mode', 'offline'),

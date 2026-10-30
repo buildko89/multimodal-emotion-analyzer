@@ -261,6 +261,9 @@
     "asr_backend": "sensevoice",
     "audio_python": "/root/devai_ara/ara06_recording_app_20261014_v1/workspace/devai/driver_eval/runtime/sensevoice/.venv/bin/python",
     "audio_torch_threads": 2,
+    "audio_quantization_by_backend": {
+      "sensevoice": "dynamic_int8_linear"
+    },
     "enabled": true,
     "native_probe_backend": "pyav",
     "overlap_main_video": true,
