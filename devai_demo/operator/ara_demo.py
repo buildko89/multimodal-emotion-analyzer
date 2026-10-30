@@ -191,7 +191,7 @@ def build_from_release(source_name):
                                  'pre_arm_noise_floor_and_window_summary_events',
                                  'visual_stride_5',
                                  'sustained_sound_asr_gate',
-                                 'cross_window_overlap'],
+                                 'cross_window_overlap_only_when_asr_skipped'],
         'files':{p.relative_to(package).as_posix():hashlib.sha256(p.read_bytes()).hexdigest()
                  for p in package.rglob('*') if p.is_file() and p!=package/'manifest.json'}}
     (package/'manifest.json').write_text(json.dumps(candidate,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')

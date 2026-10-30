@@ -671,6 +671,19 @@ def run_live(configuration):
             return {'folder': folder, 'manifest': manifest,
                     'deadline': time.monotonic()+live.get('worker_deadline_seconds', 600)}
 
+        def overlap_allowed(folder):
+            """On the device, a next window run beside SenseVoice slowed ASR by up to 2 s.
+
+            Send ahead only while the current window skipped ASR, unless configured otherwise.
+            """
+            if not live.get('overlap_only_when_asr_skipped', True):
+                return True
+            path = folder/'app/observation_integration/asr_energy_gate.json'
+            try:
+                return json.loads(path.read_text(encoding='utf-8')).get('skipped') is True
+            except (OSError, ValueError):
+                return False
+
         ahead = None
         while not inference_stop.is_set():
             folder = None
@@ -704,7 +717,7 @@ def run_live(configuration):
 
                 while True:
                     if (overlap and ahead is None and not inference_stop.is_set()
-                            and (folder/'frames_done.json').exists()):
+                            and (folder/'frames_done.json').exists() and overlap_allowed(folder)):
                         waiting = queue.get_nowait()
                         if waiting is not None:
                             sent = dispatch(waiting, ahead=True)
