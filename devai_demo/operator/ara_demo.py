@@ -183,7 +183,10 @@ def build_from_release(source_name):
                                  'strongest_audio_processed_window_retention',
                                  'remove_unused_framebuffer_backup',
                                  'sixty_second_resource_evidence_with_five_second_guard',
-                                 'allow_capture_xrun_recovery'],
+                                 'allow_capture_xrun_recovery',
+                                 'asr_energy_gate_for_silent_live_windows',
+                                 'non_blocking_ara_exact_input_cache',
+                                 'visual_display_before_ara'],
         'files':{p.relative_to(package).as_posix():hashlib.sha256(p.read_bytes()).hexdigest()
                  for p in package.rglob('*') if p.is_file() and p!=package/'manifest.json'}}
     (package/'manifest.json').write_text(json.dumps(candidate,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')

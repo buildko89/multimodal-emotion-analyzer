@@ -91,6 +91,10 @@ def window_configuration(configuration, interaction, folder):
     realtime_threads = live.get('realtime_audio_torch_threads')
     if realtime_threads is not None:
         config['observation_integration']['audio_torch_threads_by_backend'] = dict(realtime_threads)
+    # Live windows only; startup preparation keeps checking every backend.
+    energy_gate = live.get('asr_energy_gate')
+    if energy_gate is not None:
+        config['observation_integration']['asr_energy_gate'] = dict(energy_gate)
     if interaction is not None:
         config['cooperative_ai']['preferences'] = deepcopy(interaction.history)
         config['live']['preference_revision'] = interaction.preference_revision

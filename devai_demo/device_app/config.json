@@ -7,6 +7,7 @@
     "width": 640
   },
   "cooperative_ai": {
+    "background_generation_seconds": 30,
     "base_url": "http://127.0.0.1:18081",
     "candidate_thresholds": {
       "hand_mouth_risk_minimum_consecutive_frames": 3,
@@ -168,6 +169,10 @@
   },
   "live": {
     "ara_startup_warmup": false,
+    "asr_energy_gate": {
+      "peak_below": 0.03,
+      "rms_below": 0.012
+    },
     "camera": "/dev/v4l/by-id/usb-046d_0825_D9E9EBE0-video-index0",
     "capture_only": false,
     "diagnostic_replay": false,

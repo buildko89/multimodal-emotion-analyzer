@@ -79,6 +79,9 @@ p=Path({self.remote!r})
             pending_window_policy='strongest_audio_plus_latest_bounded_two',
             realtime_ser_backends=['sensevoice'],
             production_timeout_seconds=4,
+            asr_energy_gate=dict(rms_below=0.012, peak_below=0.03, applies_to='live_windows_only'),
+            ara_response='non_blocking_exact_input_cache_with_30s_background_generation',
+            visual_display_before_ara=True,
             resident_qwen_companion_dialogue=True,
             user_preparation_reply_required=True,
             created_utc=datetime.now(timezone.utc).isoformat()

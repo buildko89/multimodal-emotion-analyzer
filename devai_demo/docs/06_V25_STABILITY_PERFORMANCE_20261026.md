@@ -192,3 +192,57 @@ session `demo_continuous_20261028_140206_v25_realtime_live`で、開始前とrea
 - ディスク／RAM／process／デバイス保持を監視した8時間以上の連続運転
 
 上記が完了するまで「リアルタイム達成」「8時間連続運転達成」とは記録しない。
+
+## 2026-10-30 8時間耐久合格後の応答遅延改善（V25のまま）
+
+### 改善前の実機実測（PC推論なし・実機ログの集計のみ）
+
+耐久session `demo_continuous_20261028_170500_v25_soak8h`（14時間09分、178 files／
+54,791,395 bytesを全hash一致で回収・3コピーoffload）の`live_events.jsonl`を集計した。
+
+- 閉じた窓12,591件のうち処理4,250件（約66%が処理待ちで破棄）
+- ARA応答4,249件すべて`fallback`（生成採用0件）
+- 窓確定→ARA表示：p50 18.9秒、p90 26.4秒
+- ARA監査：prefillだけでTTFT約3.7秒、完全生成は約10.1秒（約33 token）。
+  4秒budgetでは原理的に生成が完了せず、毎窓4秒を待ってからfallbackしていた。
+- `demo_continuous_20261028_140206_v25_realtime_live`の窓内訳：SenseVoice 6.5～7.5秒、
+  Visual worker 4.5～8.7秒、窓処理全体約11.4秒（うちARA待ち約4秒）。
+  無音窓でも同じ時間を使うため、発話窓が直前の無音窓の後ろで約5秒待った。
+- Visual表示用`compact_observations.json`がARA呼び出し後に書かれていたため、
+  画像認識結果の表示もARA待ちの後になっていた。
+
+### 変更（3点、モデル・窓幅・キュー上限・保持数は不変）
+
+1. **無音窓のSenseVoice省略（`live.asr_energy_gate`）**：窓PCMのRMS < 0.012
+   **かつ** peak < 0.03 の場合だけSenseVoiceを呼ばない。どちらかを超えれば従来どおり実行する
+   （騒がしい環境では省略されない側に倒れる）。判断値は各窓の`asr_energy_gate.json`と
+   `sensevoice_client_audit.json`（`status: skipped`）に記録し、ASR観測は`unavailable`とする。
+   起動時準備は対象外で、従来どおり全backendの`ok`を要求する。
+   耐久sessionの実測値では、処理窓4,250件中2,941件（約74%）が省略対象になり、
+   省略対象窓の非空ASRは`i`等の無音時の誤出力だけだった（意味のある日本語の欠落0件）。
+   閾値0.08案は小声の「こんにちは」等を落とすため不採用。
+2. **ARA応答の非ブロッキング化（`cooperative_ai.background_generation_seconds: 30`）**：
+   窓処理はARAを待たない。同一要求（messages＋schemaのSHA-256が完全一致、temperature 0・seed 42）
+   のARA生成済み文があれば即時採用し（`response_source: ara_exact_input_cache`）、
+   無ければ検証済みfallbackを即時表示して、裏で1件だけ30秒budgetで生成する。
+   常駐runtime内で最大32件を保持し、生成中の重複要求は出さない（`busy`）。
+   現行promptは表情区分と案内文だけで構成されるため、数種類の表情が出現した後はARA生成文が
+   表示される。ASR本文は現行どおりpromptに含めていない。
+3. **画像認識結果をARAより先に表示**：`compact_observations.json`をARA呼び出し前に書く。
+
+### 期待値（未検証）
+
+窓処理は無音窓で約11.4秒→約5秒、発話窓で約11.4秒→約8秒台を見込む。待ち行列の滞留が減るため、
+発話窓末尾→ASR／画像表示は約14～19秒から約8～10秒への短縮を見込む。
+**これは実機ログからの見積もりであり、本人の実機入力で再計測するまで達成とは扱わない。**
+
+### 配備
+
+- V25の番号・配備先を変えず`build --from-release ara_demo_20261026_v24`→`deploy`。
+  前V25からの変更は`config.json`と3 module（`observation_integration.py`、
+  `demo_response_transport.py`、`live_pipeline.py`）だけ。
+- deploy後doctor：`ok=true`、`bad_hashes=[]`、ARA `ready`、device holder 0、
+  空き216,248,320 bytes。
+- 配備前に、未offloadだった`demo_continuous_20261028_142628_v25_soak8h`（164 files）も
+  3コピー検証後にoffloadし、空き容量を回復した。常駐ARAの`/root/devai_ara/services/ara_llm/ara_audit.jsonl`
+  （約7.5MB）が要求ごとに増える点は残件。今回の変更でARA呼出し数は大きく減る。

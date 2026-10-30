@@ -209,8 +209,33 @@ class ObservationIntegrationSession:
                        'common_audio_sample_interval': [0, self.samples],
                        'av_absolute_sync': {'status': 'not_measured', 'error_seconds': None}}
         write_json(self.directory / 'input_manifest.json', self.inputs)
+        self.asr_energy_gate = self.energy_gate(pcm)
+        if self.asr_energy_gate is not None:
+            write_json(self.directory / 'asr_energy_gate.json', self.asr_energy_gate)
         if self.config.get('parallel_backends', False):
             self.start_backend_tasks()
+
+    def energy_gate(self, pcm):
+        """Skip SenseVoice only for clearly silent live windows; the decision is evidence.
+
+        Both RMS and peak must be below their limits, so any louder input keeps ASR.
+        """
+        gate = self.config.get('asr_energy_gate')
+        if not gate:
+            return None
+        limits = gate.get('rms_below'), gate.get('peak_below')
+        if any(isinstance(v, bool) or not isinstance(v, (int, float)) or not 0 < v <= 1 for v in limits):
+            raise ValueError('asr_energy_gate_limits_out_of_range')
+        import numpy as np
+        signal = np.frombuffer(pcm, dtype='<i2').astype(np.float64) / 32768
+        rms = float(np.sqrt(np.mean(signal ** 2)))
+        peak = float(np.max(np.abs(signal)))
+        return {'policy': 'skip_sensevoice_when_rms_and_peak_below', 'rms': rms, 'peak': peak,
+                'rms_below': limits[0], 'peak_below': limits[1],
+                'skipped': rms < limits[0] and peak < limits[1], 'speech_verified': False}
+
+    def asr_skipped(self, backend):
+        return backend == 'sensevoice' and bool((self.asr_energy_gate or {}).get('skipped'))
 
     def start_backend_tasks(self):
         from concurrent.futures import ThreadPoolExecutor
@@ -243,6 +268,13 @@ class ObservationIntegrationSession:
         return future.result() if future is not None else self.invoke(backend)
 
     def invoke(self, backend):
+        if self.asr_skipped(backend):
+            reply = {'protocol': 'observation-worker-v1', 'backend_id': backend, 'status': 'skipped',
+                     'reason': 'asr_energy_gate_low_energy', 'artifacts': [],
+                     'gap': {'interval_seconds': [self.media_begin, self.media_end], 'reason': 'asr_energy_gate'},
+                     'energy_gate': deepcopy(self.asr_energy_gate)}
+            write_json(self.directory / f'{backend}_client_audit.json', [reply])
+            return reply
         executable = self.config['visual_python' if backend == 'visual' else 'audio_python']
         script = REPO / 'scripts/observation_worker.py'
         interval = [0.0, self.duration] if backend == 'visual' else [self.media_begin, self.media_end]
@@ -293,6 +325,9 @@ class ObservationIntegrationSession:
 
     def sensevoice_transcript(self):
         reply = self.audio_reply('sensevoice')
+        if reply['status'] == 'skipped':
+            return {'text': '', 'language': 'ja', 'segments': [], 'status': 'skipped_low_energy',
+                    'reason': reply['reason'], 'asr_backend': 'sensevoice'}
         if reply['status'] != 'ok':
             return {'text': '', 'language': 'ja', 'segments': [], 'status': 'inference_failure',
                     'reason': reply['reason'], 'asr_backend': 'sensevoice'}
@@ -386,7 +421,9 @@ class ObservationIntegrationSession:
                         else 'unavailable', failure_reason=speech_result.get('reason', 'no_asr_segments'))
         for backend, reply in self.audio_replies.items():
             if reply['status'] != 'ok':
-                observation('acoustic_emotion', backend, None, [], status='inference_failure', failure_reason=reply['reason'])
+                observation('acoustic_emotion', backend, None, [],
+                            status='unavailable' if reply['status'] == 'skipped' else 'inference_failure',
+                            failure_reason=reply['reason'])
                 continue
             path = Path(reply['artifacts'][0]['resolved_path'])
             raw = read_json(path)
@@ -447,7 +484,7 @@ class ObservationIntegrationSession:
                    'observation_status_counts': dict(Counter(o['status'] for o in observations)),
                    'person_window_count': len(envelope['person_windows']), 'speaker_verified_count': 0,
                    'state_candidates': [], 'response': None, 'validation': validation,
-                   'worker_failures': sum(v != 'ok' for v in envelope['backend_health'].values())}
+                   'worker_failures': sum(v not in ('ok', 'skipped') for v in envelope['backend_health'].values())}
         write_json(self.output / 'observation_summary.json', summary)
         rows = ''.join(f'<tr><td>{html.escape(k)}</td><td>{v}</td></tr>' for k, v in summary['observations_by_kind'].items())
         page = '<!doctype html><meta charset="utf-8"><title>観測統合結果</title><h1>観測統合結果</h1>'
