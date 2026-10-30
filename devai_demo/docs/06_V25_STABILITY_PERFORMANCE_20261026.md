@@ -343,3 +343,18 @@ ARA文は『必要な案内だけ表示します。』などいろいろ出る�
 
 対策（同日配備）：`overlap_only_when_asr_skipped: true`。現在の窓がASRを省略した（無音）場合だけ次窓を先送りし、
 発話窓のASRは単独で走らせる。commit後に再配備（doctor ok、hash一致、実機compile ok、空き215,977,984 bytes）。効果は未計測。
+
+### 2026-10-30 23:35 5回目（`demo_continuous_20261030_232338_v25_perf_live5`）で発生した不具合と修正
+
+開始前「準備できてます。」、ready後「話せます。」を別々に受けてarm。181 files／26,547,125 bytesを全hash一致で回収し、
+3コピーoffload。本人がHDMIで「Error2 No such file or directory」表示を確認。
+
+- 原因：発話優先キューは音量の大きい窓から渡すため、古い`live_000009`が新しい`live_000010`・`live_000011`の後に
+  取り出された。先送りでencodeした直後、保持パージ（最大RMS＋最新2件）が`live_000009`を古い窓として削除し、
+  直後の`processing_config.json`書込みが`FileNotFoundError`になった。window_failureにより以後の認識が停止した。
+  この削除条件は逐次処理でも潜在していたが、先送りで顕在化した。
+- 修正：`result.json`のない（処理中の）窓はパージ対象にしない（方針名どおり「完了窓」だけを削除）。
+  一時ディレクトリでパージ関数単体を確認し、処理中の2窓を保持して完了済みの古い窓だけを削除した。
+  保持数は完了3窓＋処理中最大2窓で有界。
+- 今回sessionは失敗が開始約20秒で起きたため、性能値の比較には使わない。
+- 再配備：doctor ok、bad_hashes 0、ARA ready、空き215,924,736 bytes、hash一致、実機compile ok。

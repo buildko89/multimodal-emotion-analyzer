@@ -68,6 +68,11 @@ def purge_processed_windows(windows_dir, retention=3):
     for item in entries:
         if item['path'] in retained_paths:
             continue
+        # A window still being processed is never removed.  The speech-priority
+        # queue can hand out an older window after newer ones, so a just-encoded
+        # window may otherwise look stale and be deleted under its own processing.
+        if not (item['path']/'result.json').is_file():
+            continue
         resolved = item['path'].resolve()
         if resolved.parent != root:
             raise ValueError('processed_window_path_escape')
