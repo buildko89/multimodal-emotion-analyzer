@@ -196,7 +196,7 @@
     "cross_window_overlap": true,
     "window_extension": {
       "max_extra_seconds": 3.0,
-      "tail_seconds": 0.3,
+      "tail_seconds": 0.6,
       "min_tail_active_frames": 3
     },
     "overlap_only_when_asr_skipped": true,
