@@ -471,3 +471,16 @@ window_failureは停止時の1件だけ。
   - 窓ごとの比較を`window_perception_summary.face_detection`（主・NPUの顔あり数、IoU≥0.5で一致したフレーム数、最大スコア、平均時間）に記録する。
 - ③`processing_started.encode_seconds`：窓の映像・音声のencode（libx264＋時刻の検証）にかかった時間。
 - `face_landmarker_adapter.py`の`reset_graph`のコメントの誤り（「NPU detector」）を訂正した。
+
+### 2026-10-31 11回目（`demo_continuous_20261031_095456_v25_perf_live11`）：①～③の実測
+
+開始前「計測始めましょう」、ready後「はい、話せます」を別々に受けてarm。録音201秒、閉窓46件・処理33件。172 filesを全hash一致で回収し、3コピーoffload（停止は正常）。
+
+- ①Emotion2Vecの停止：準備の後に閉じた（`released_workers.json`：exited true）。live後半のMemAvailableの最小値は3.48→**4.09 GiB**、RSS合計の最大は4.31→**3.60 GiB**（10回目比）。Swap使用は222 MiBで変わらず（一度swapへ出たページが残るため）。
+- ②NPU BlazeFaceの並走：1,342フレーム中、主の検出（CPU）と**99.5%一致**（顔の数が同じで、IoU≥0.5）。エラー0件。不一致が1割を超えた窓は32窓中1窓だけだった。
+  1フレームあたりの時間は、NPUが**11.4 ms**（letterboxとUDSを含む）、CPUのMediaPipeが32.8 ms。スコアは予想どおり全フレームで0.5に張り付いたが、顔の有無と位置は正しく出た。
+  並走したぶん、フレームループは中央値1.83→2.43秒に遅くなった。
+- ③encode：1窓あたり**中央値0.65秒**（0.56～0.92秒）。VPUへ移しても縮むのは最大で約0.65秒なので、優先度は低い。
+- 字幕：窓確定から中央値10.6秒（12件）。画像表示は中央値12.0秒。並走の負荷と標本の少なさのため、10回目（9.0／12.2秒）との差は判断できない。
+
+対応：`face_detection.npu_blazeface: {min_score: 0.4, mode: "primary"}`。NPUの結果を主の顔検出として使う。NPUがエラーのときは、設定された検出（MediaPipe、CPU）に戻る。

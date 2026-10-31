@@ -58,18 +58,24 @@ class EmotionDetector:
         }
 
     def _init_face_detection_shadow(self):
-        """Run the Neutron NPU BlazeFace beside the primary detector, for comparison only.
+        """Neutron NPU BlazeFace, either beside the configured detector or in its place.
 
-        The converted model was never validated: its score output saturates at
-        sigmoid(0)=0.5 and its input is quantized for 0..1.  Its boxes are only
-        recorded per frame; the primary detector still drives the app.
+        The converted model's score output saturates at sigmoid(0)=0.5 and its
+        input is quantized for 0..1.  Run beside the CPU MediaPipe detector on the
+        device (perf_live11), its boxes agreed on 99.5% of 1,342 frames (IoU >= 0.5)
+        at 11 ms against 33 ms per frame, so "mode": "primary" may replace it.
+        The configured detector remains the fallback if the NPU path fails.
         """
         self.face_shadow = None
         self.face_shadow_error = None
+        self.face_npu_primary = False
         self.last_face_detection = None
-        shadow = self.config.get("face_detection", {}).get("npu_shadow")
+        shadow = self.config.get("face_detection", {}).get("npu_blazeface")
         if not shadow or not os.path.exists("/dev/neutron0"):
             return
+        if shadow.get("mode", "shadow") not in ("shadow", "primary"):
+            raise ValueError("npu_blazeface_mode")
+        self.face_npu_primary = shadow.get("mode") == "primary"
         model = Path(__file__).resolve().parent / "blazeface_neutron.tflite"
         try:
             from models.neutron_blazeface_client import NeutronBlazeFaceClient
@@ -580,8 +586,14 @@ class EmotionDetector:
         # 顔検出
         face_start = time.time()
         model_type = self.config["face_detection"]["model"]
+        npu = None
+        if self.face_shadow is not None and self.face_npu_primary:
+            npu = self._shadow_face_detection(image)
 
-        if model_type == "haarcascade":
+        if npu is not None and "faces" in npu:
+            faces = [tuple(int(round(v)) for v in box[:4]) for box in npu["faces"]]
+            model_type = "neutron_blazeface"
+        elif model_type == "haarcascade":
             faces = self._detect_faces_haarcascade(image)
         elif model_type == "yolov8":
             faces = self._detect_faces_yolov8(image)
@@ -596,7 +608,10 @@ class EmotionDetector:
         self.timings["face_detection"].append(face_time)
         self.last_face_detection = {"primary": model_type, "primary_seconds": face_time,
                                     "primary_faces": [list(map(int, face)) for face in faces]}
-        if self.face_shadow is not None:
+        if npu is not None:
+            if "faces" not in npu:
+                self.last_face_detection["npu_error"] = npu
+        elif self.face_shadow is not None:
             self.last_face_detection["npu_shadow"] = self._shadow_face_detection(image)
         elif self.face_shadow_error:
             self.last_face_detection["npu_shadow"] = {"error": self.face_shadow_error}

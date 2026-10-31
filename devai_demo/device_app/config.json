@@ -153,8 +153,9 @@
       "model_selection": 0
     },
     "model": "mediapipe",
-    "npu_shadow": {
-      "min_score": 0.4
+    "npu_blazeface": {
+      "min_score": 0.4,
+      "mode": "primary"
     },
     "retinaface": {
       "model": "retinaface",
