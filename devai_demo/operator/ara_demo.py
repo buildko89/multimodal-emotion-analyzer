@@ -232,7 +232,9 @@ else:
  target.parent.mkdir(exist_ok=False)
  shutil.copytree(base,target,copy_function=os.link,symlinks=True)
 ''','deploy_prepare')
-    with tempfile.TemporaryDirectory(dir=RUN,prefix='deploy_delta_') as temporary:
+    # Windows can briefly lock the local copy after scp; a leftover local
+    # temporary must not abort the deployment once the upload completed.
+    with tempfile.TemporaryDirectory(dir=RUN,prefix='deploy_delta_',ignore_cleanup_errors=True) as temporary:
         delta=Path(temporary)
         for name in changed:
             target=delta/name;target.parent.mkdir(parents=True,exist_ok=True)
