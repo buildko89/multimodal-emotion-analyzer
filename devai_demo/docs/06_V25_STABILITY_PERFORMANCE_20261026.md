@@ -459,3 +459,15 @@ window_failureは停止時の1件だけ。
   上の該当箇所は訂正した。`face_landmarker_adapter.py`の`reset_graph`のコメントにも同じ誤りが残っているが、固定した配備版（`ab3cb3b`）と
   ソースを一致させるため、コードは変更していない（次にコードを変更するときに直す）。
 - 構造・ボトルネック・操作手順は `ara_spec/`（01～03）にまとめた。
+
+### 2026-10-31 ①Emotion2Vecの停止 ②顔検出のNPU化（まず並走で比較） ③encode時間の計測（本人指示「Emotion2Vecの停止 → 顔検出のNPU化 → encode時間の計測 → 顔ランドマーク・手のNPU化までやってみましょう。」）
+
+- ①`live.release_unused_audio_workers: true`：起動時の準備（Emotion2Vecを含む全backendの健全性チェック）が終わった後、live窓で使わない音声workerを閉じる。結果は`live/released_workers.json`と`window_runtime_final.json`に記録する。
+- ②`face_detection.npu_shadow: {min_score: 0.4}`：リポジトリにあった未使用のNPU用BlazeFace（`models/blazeface_neutron.tflite`、10/24変換）を、
+  主の顔検出（MediaPipe BlazeFace、CPU）と**並走**させ、フレームごとに結果と時間を記録する（表示・後段は主の検出のまま）。
+  - 切り替えずに並走させた理由：実機でモデルの量子化パラメータを読んだところ、スコア出力が`scale 0.6609, zero_point 127`で、表せる範囲が −168.5～0 だった。つまりsigmoidの最大が0.5に張り付く。
+    入力も0～1の範囲で量子化されている（MediaPipeの元モデルは−1～1を想定）。変換時の校正が不適切だった可能性が高く、検証なしには使えない。
+  - 新規の`models/blazeface_decode.py`：896アンカーの生成、letterbox、box復号、NMS（IoU 0.3）。PCでは合成テンソルで算術だけを確認した（中心・大きさの復元と重複除去）。
+  - 窓ごとの比較を`window_perception_summary.face_detection`（主・NPUの顔あり数、IoU≥0.5で一致したフレーム数、最大スコア、平均時間）に記録する。
+- ③`processing_started.encode_seconds`：窓の映像・音声のencode（libx264＋時刻の検証）にかかった時間。
+- `face_landmarker_adapter.py`の`reset_graph`のコメントの誤り（「NPU detector」）を訂正した。

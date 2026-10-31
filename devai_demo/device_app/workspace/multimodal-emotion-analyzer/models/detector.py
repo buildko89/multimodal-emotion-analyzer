@@ -30,6 +30,7 @@ class EmotionDetector:
 
         # 顔検出器初期化
         self._init_face_detector()
+        self._init_face_detection_shadow()
 
         # 表情認識器初期化
         self._init_emotion_recognizer()
@@ -55,6 +56,48 @@ class EmotionDetector:
             "emotion_recognition": [],
             "total": []
         }
+
+    def _init_face_detection_shadow(self):
+        """Run the Neutron NPU BlazeFace beside the primary detector, for comparison only.
+
+        The converted model was never validated: its score output saturates at
+        sigmoid(0)=0.5 and its input is quantized for 0..1.  Its boxes are only
+        recorded per frame; the primary detector still drives the app.
+        """
+        self.face_shadow = None
+        self.face_shadow_error = None
+        self.last_face_detection = None
+        shadow = self.config.get("face_detection", {}).get("npu_shadow")
+        if not shadow or not os.path.exists("/dev/neutron0"):
+            return
+        model = Path(__file__).resolve().parent / "blazeface_neutron.tflite"
+        try:
+            from models.neutron_blazeface_client import NeutronBlazeFaceClient
+            self.face_shadow = NeutronBlazeFaceClient(model_path=model)
+            self.face_shadow_min_score = float(shadow.get("min_score", 0.4))
+        except Exception as error:
+            self.face_shadow_error = f"{type(error).__name__}: {error}"
+
+    def _shadow_face_detection(self, image: np.ndarray) -> Dict:
+        from models.blazeface_decode import decode, letterbox
+        started = time.time()
+        try:
+            square, geometry = letterbox(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
+            regressors, logits = self.face_shadow.predict_raw(square)
+            boxes, best = decode(regressors, logits, geometry, image.shape,
+                                 min_score=self.face_shadow_min_score)
+            return {"faces": [[round(v, 1) for v in box[:4]] + [round(box[4], 4)] for box in boxes],
+                    "best_score": round(best, 4), "seconds": time.time() - started}
+        except Exception as error:
+            self.face_shadow.close()
+            self.face_shadow = None
+            self.face_shadow_error = f"{type(error).__name__}: {error}"
+            return {"error": self.face_shadow_error, "seconds": time.time() - started}
+
+    def close_face_detection_shadow(self):
+        if self.face_shadow is not None:
+            self.face_shadow.close()
+            self.face_shadow = None
 
     def _resolve_path(self, path_str: str) -> str:
         """パスを解決する (存在確認含む)"""
@@ -551,6 +594,12 @@ class EmotionDetector:
 
         face_time = time.time() - face_start
         self.timings["face_detection"].append(face_time)
+        self.last_face_detection = {"primary": model_type, "primary_seconds": face_time,
+                                    "primary_faces": [list(map(int, face)) for face in faces]}
+        if self.face_shadow is not None:
+            self.last_face_detection["npu_shadow"] = self._shadow_face_detection(image)
+        elif self.face_shadow_error:
+            self.last_face_detection["npu_shadow"] = {"error": self.face_shadow_error}
 
         if self.tracking_enabled:
             face_ids = self.tracker.update(faces)

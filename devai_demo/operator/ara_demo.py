@@ -196,7 +196,9 @@ def build_from_release(source_name):
                                  'sensevoice_sounding_span_only',
                                  'sensevoice_dynamic_int8',
                                  'sensevoice_language_ja',
-                                 'speech_aware_window_extension'],
+                                 'speech_aware_window_extension',
+                                 'release_unused_audio_workers_after_preparation',
+                                 'npu_blazeface_shadow_and_encode_timing'],
         'files':{p.relative_to(package).as_posix():hashlib.sha256(p.read_bytes()).hexdigest()
                  for p in package.rglob('*') if p.is_file() and p!=package/'manifest.json'}}
     (package/'manifest.json').write_text(json.dumps(candidate,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')

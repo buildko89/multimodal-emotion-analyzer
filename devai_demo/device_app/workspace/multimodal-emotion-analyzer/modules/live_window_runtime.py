@@ -21,6 +21,7 @@ class LiveWindowRuntime:
         self.detector_instance_id = uuid.uuid4().hex
         self.windows_processed = 0
         self.clients = {}
+        self.released_workers = {}
         self.worker_request_retention = int(config['live'].get('worker_request_retention', 2))
         if not 1 <= self.worker_request_retention <= 16:
             raise ValueError('worker_request_retention_out_of_range')
@@ -73,6 +74,21 @@ class LiveWindowRuntime:
         temporary.replace(target)
         return state
 
+    def release_unused_audio_workers(self, used):
+        """Stop audio workers that live windows never call, once preparation has checked them.
+
+        On the device the Emotion2Vec worker stayed resident (RSS 0.7-1.7 GiB)
+        while live windows ran SenseVoice only.
+        """
+        for backend in [b for b in self.clients if b != 'visual' and b not in used]:
+            client = self.clients.pop(backend)
+            process = client.process
+            client.close()
+            self.released_workers[backend] = {'start_count': client.start_count,
+                'pid': process.pid if process else None, 'released_after_preparation': True,
+                'exited': process is None or process.poll() is not None}
+        return dict(self.released_workers)
+
     def new_app(self, config_path, *, preparation=False):
         from multimodal_app import MultiModalEmotionApp
         if self.detector is not None:
@@ -100,7 +116,7 @@ class LiveWindowRuntime:
                 state.update(ready=False,state='stopped',status=preparation_status('stopped'),
                              reason='owning_runtime_closed')
                 publish(preparation,state)
-        workers = {}
+        workers = dict(self.released_workers)
         for backend, client in self.clients.items():
             process = client.process
             client.close()
@@ -109,6 +125,7 @@ class LiveWindowRuntime:
                 'exited': process is None or process.poll() is not None}
         if self.detector is not None:
             self.detector.face_model.close()
+            self.detector.close_face_detection_shadow()
             self.detector = None
         final = self.output/'window_runtime_final.json'
         if not final.exists():
@@ -150,6 +167,10 @@ def serve_windows(config_path):
             from modules.live_preparation import prepare_runtime
             prepare_runtime(runtime, config, WORKSPACE)
             runtime.purge_worker_requests()
+            if config['live'].get('release_unused_audio_workers'):
+                used = set(config['live'].get('realtime_ser_backends') or [])
+                used.add(config['observation_integration'].get('asr_backend'))
+                write_json(output/'released_workers.json', runtime.release_unused_audio_workers(used))
         for line in sys.stdin:
             request = json.loads(line)
             manifest = Path(request['manifest']).resolve()

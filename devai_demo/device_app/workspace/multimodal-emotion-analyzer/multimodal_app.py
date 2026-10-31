@@ -367,6 +367,7 @@ class MultiModalEmotionApp:
                         "inference_started_ns": inference_started_ns,
                         "inference_completed_ns": inference_completed_ns,
                         "face_count": len(emotion_results), "faces": emotion_results,
+                        "face_detection": getattr(self.emotion_detector, "last_face_detection", None),
                     }, ensure_ascii=False, default=_json_value, allow_nan=False) + "\n")
                 if joiner:
                     joiner.observe(timestamp_ns, emotion_results)

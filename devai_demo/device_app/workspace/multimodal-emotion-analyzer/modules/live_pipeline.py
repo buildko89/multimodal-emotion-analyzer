@@ -109,6 +109,26 @@ def asr_energy_limits(gate, history):
     return limits
 
 
+def face_detection_summary(path):
+    """Primary vs NPU-shadow face detection over one window's frames."""
+    from models.blazeface_decode import iou
+    rows = [json.loads(line).get('face_detection') for line in path.read_text(encoding='utf-8').splitlines()]
+    rows = [row for row in rows if row]
+    result = {'frames': len(rows), 'primary_face_frames': sum(len(r['primary_faces']) == 1 for r in rows),
+              'primary_mean_seconds': sum(r['primary_seconds'] for r in rows) / len(rows) if rows else None}
+    shadow = [r for r in rows if 'npu_shadow' in r]
+    if shadow:
+        ok = [r for r in shadow if 'faces' in r['npu_shadow']]
+        agree = sum(1 for r in ok if len(r['primary_faces']) == len(r['npu_shadow']['faces']) and
+                    all(iou(p, s[:4]) >= 0.5 for p, s in zip(r['primary_faces'], r['npu_shadow']['faces'])))
+        result['npu_shadow'] = {'frames': len(ok), 'errors': len(shadow) - len(ok),
+            'face_frames': sum(len(r['npu_shadow']['faces']) == 1 for r in ok),
+            'agree_frames': agree,
+            'best_score_max': max((r['npu_shadow']['best_score'] for r in ok), default=None),
+            'mean_seconds': sum(r['npu_shadow']['seconds'] for r in ok) / len(ok) if ok else None}
+    return result
+
+
 def perception_summary(folder):
     """Gate decision and backend timings, logged before the window can be purged."""
     integration = Path(folder)/'app/observation_integration'
@@ -122,6 +142,9 @@ def perception_summary(folder):
         reply = json.loads(audit.read_text(encoding='utf-8'))[-1]
         summary['backends'][reply['backend_id']] = {'status': reply['status'],
             'worker_seconds': (reply['completed_ns']-reply['started_ns'])/1e9 if 'completed_ns' in reply else None}
+    frames = Path(folder)/'app/frame_observations.jsonl'
+    if frames.exists():
+        summary['face_detection'] = face_detection_summary(frames)
     timing = Path(folder)/'app/pipeline_timing.json'
     if timing.exists():
         value = json.loads(timing.read_text(encoding='utf-8'))
@@ -675,7 +698,9 @@ def run_live(configuration):
                 return None
             folder = output/'windows'/window['window_id']
             with lock: shared['status'] = '実入力窓の知覚・ARA診断を処理中（遅延あり）'
+            encode_started = time.monotonic_ns()
             manifest = encode_window(window, folder)
+            encode_seconds = (time.monotonic_ns() - encode_started) / 1e9
             retention = purge_processed_windows(
                 output/'windows', int(live.get('processed_window_retention', 3)))
             write(output/'processed_window_retention.json', retention)
@@ -687,7 +712,8 @@ def run_live(configuration):
                 with lock:
                     shared['visual_result'] = dict(state='processing', window_id=manifest['window_id'],
                                                    source_end_ns=manifest['interval_ns'][1])
-            emit({'event': 'processing_started', 'window_id': manifest['window_id'], 'sent_ahead': ahead})
+            emit({'event': 'processing_started', 'window_id': manifest['window_id'], 'sent_ahead': ahead,
+                  'encode_seconds': encode_seconds})
             if live.get('capture_only', False):
                 emit({'event': 'capture_window_verified', 'window_id': manifest['window_id'],
                       'native_mux_verified': manifest['native_mux_verified']})

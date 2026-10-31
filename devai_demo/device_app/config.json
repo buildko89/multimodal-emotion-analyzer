@@ -153,6 +153,9 @@
       "model_selection": 0
     },
     "model": "mediapipe",
+    "npu_shadow": {
+      "min_score": 0.4
+    },
     "retinaface": {
       "model": "retinaface",
       "threshold": 0.5
@@ -194,6 +197,7 @@
     "camera": "/dev/v4l/by-id/usb-046d_0825_D9E9EBE0-video-index0",
     "capture_only": false,
     "cross_window_overlap": true,
+    "release_unused_audio_workers": true,
     "window_extension": {
       "max_extra_seconds": 3.0,
       "tail_seconds": 0.6,

@@ -42,7 +42,7 @@ class FaceLandmarkerAdapter:
         """Fresh VIDEO graph for a new recording, without re-verifying the bundle.
 
         On the device, a graph reused across 4 s windows lost the face for the
-        first ~2 s of a window while the NPU detector saw it in every frame.
+        first ~2 s of a window while the frame-loop BlazeFace (CPU) saw it in every frame.
         """
         self.detector.close()
         self.detector = mp.tasks.vision.FaceLandmarker.create_from_options(self.options)
