@@ -414,3 +414,10 @@ window_failureは停止時の1件だけ。本人申告「音声認識は、何�
   - 短い断片（0.3～0.5秒）では`language="auto"`が中国語の「嗯」を2回出した
   - 境目に接していない窓は「こんにちは」「今日はいい天気ですね」「音声認識が遅いね」「どうでしょう」など正しく認識した
 - 結論：速度はINT8で約3～4割短縮した。誤認識の主因はモデルの精度ではなく、固定4秒窓による発話の分断と、言語の自動判定。
+
+### 2026-10-31 ①言語のja固定と②発話に合わせた窓の延長（本人承認「①②両方で進めましょう。」）
+
+- ①`observation_integration.audio_language_by_backend.sensevoice: "ja"`。SenseVoiceの`language`を`auto`から`ja`へ固定する（短い断片が中国語の「嗯」になるのを防ぐ）。cacheされたadapterと設定が違えば拒否する。設定を消せば`auto`へ戻る。
+- ②`live.window_extension`（`max_extra_seconds: 3.0`、`tail_seconds: 0.3`、`min_tail_active_frames: 3`）。4秒の時点で、直近0.3秒に持続音（ASRゲートと同じ閾値：max(0.012, 窓内p20×2)を超える20ms frameが3個以上）があれば窓を閉じずに延ばす。無音になった時点、または最長7秒で閉じる。窓は連続したままで、窓どうしの依存や字幕の重複は生じない。
+  延長した秒数は`window_closed.boundary_extension_seconds`と`capture_manifest.json`に記録する。設定を消せば固定4秒窓へ戻る。
+- 代償：境目をまたぐ発話だけ、窓が最大3秒長くなり、その分の画像処理と字幕が遅れる。PCでは文法の確認（compile）だけを行った。

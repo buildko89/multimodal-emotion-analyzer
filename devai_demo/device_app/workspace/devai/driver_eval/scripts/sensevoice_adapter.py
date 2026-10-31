@@ -48,16 +48,21 @@ class SenseVoiceAdapter:
     """Serial, one offline mono 16kHz interval per call; input time is asset time."""
     QUANTIZATIONS = {None, "dynamic_int8_linear"}
 
-    def __init__(self, quantization=None):
+    LANGUAGES = {"auto", "ja"}
+
+    def __init__(self, quantization=None, language="auto"):
         if quantization not in self.QUANTIZATIONS:
             raise ValueError("Unsupported SenseVoice quantization")
+        if language not in self.LANGUAGES:
+            raise ValueError("Unsupported SenseVoice language")
         self.quantization = quantization
+        self.language = language
         self.backend = None
         self.provenance = {"model_id": "FunAudioLLM/SenseVoiceSmall", "weight_revision": REVISION,
                            "weight_sha256": WEIGHT_SHA, "weight_verified": False,
                            "runtime_version": importlib.metadata.version("funasr"),
                            "device": "cpu", "trust_remote_code": False, "disable_update": True,
-                           "quantization": quantization}
+                           "quantization": quantization, "language": language}
         self.load_report = None
         self.diagnostics = {}
 
@@ -190,7 +195,7 @@ class SenseVoiceAdapter:
             self.diagnostics = {}
             start = time.perf_counter()
             raw = self.backend.generate(input=samples.astype(np.float32, copy=False), cache={},
-                                        language="auto", use_itn=False, ban_emo_unk=False,
+                                        language=self.language, use_itn=False, ban_emo_unk=False,
                                         batch_size=1, output_timestamp=False, disable_pbar=True)
             result["timing"]["generate_s"] = time.perf_counter() - start
             result["backend_output"] = raw

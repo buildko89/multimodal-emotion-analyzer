@@ -194,6 +194,11 @@
     "camera": "/dev/v4l/by-id/usb-046d_0825_D9E9EBE0-video-index0",
     "capture_only": false,
     "cross_window_overlap": true,
+    "window_extension": {
+      "max_extra_seconds": 3.0,
+      "tail_seconds": 0.3,
+      "min_tail_active_frames": 3
+    },
     "overlap_only_when_asr_skipped": true,
     "diagnostic_replay": false,
     "diagnostic_seconds": 120,
@@ -263,6 +268,9 @@
     "audio_torch_threads": 2,
     "audio_quantization_by_backend": {
       "sensevoice": "dynamic_int8_linear"
+    },
+    "audio_language_by_backend": {
+      "sensevoice": "ja"
     },
     "enabled": true,
     "native_probe_backend": "pyav",

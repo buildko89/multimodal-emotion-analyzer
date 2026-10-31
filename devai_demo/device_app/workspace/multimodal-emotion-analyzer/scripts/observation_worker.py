@@ -186,9 +186,12 @@ def audio(request, folder, adapters=None):
         adapter = adapters[backend]
         if getattr(adapter, 'quantization', None) != request.get('quantization'):
             raise ValueError('cached_adapter_quantization_mismatch')
+        if backend == 'sensevoice' and adapter.language != request.get('language', 'auto'):
+            raise ValueError('cached_adapter_language_mismatch')
     elif backend == 'sensevoice':
         from sensevoice_adapter import SenseVoiceAdapter
-        adapter = SenseVoiceAdapter(quantization=request.get('quantization'))
+        adapter = SenseVoiceAdapter(quantization=request.get('quantization'),
+                                    language=request.get('language', 'auto'))
     else:
         from emotion2vec_adapter import Emotion2vecAdapter
         adapter = Emotion2vecAdapter()

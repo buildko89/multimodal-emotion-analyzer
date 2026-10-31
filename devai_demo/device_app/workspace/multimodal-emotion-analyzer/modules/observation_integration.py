@@ -337,6 +337,9 @@ class ObservationIntegrationSession:
                 quantization = self.config.get('audio_quantization_by_backend', {}).get(backend)
                 if quantization is not None:
                     payload['quantization'] = quantization
+                language = self.config.get('audio_language_by_backend', {}).get(backend)
+                if language is not None:
+                    payload['language'] = language
             reply = client.submit(self.video if backend == 'visual' else self.common_audio, interval,
                                   timeout_s=self.config.get('worker_timeout_seconds', 120),
                                   mode=self.config.get('worker_mode', 'offline'),

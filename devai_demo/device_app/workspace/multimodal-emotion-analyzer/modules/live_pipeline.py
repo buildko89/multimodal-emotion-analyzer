@@ -397,6 +397,36 @@ def run_live(configuration):
         audio_history = deque(maxlen=(energy_gate or {}).get('adaptive', {}).get('history_windows', 30))
         learn_before_arm = bool((energy_gate or {}).get('adaptive', {}).get('learn_before_arm'))
         preview = {'last_end_ns': 0, 'samples': 0}
+        extension = live.get('window_extension')
+        activity = (energy_gate or {}).get('activity')
+        def speech_continues(start, end, base_seconds):
+            """Keep a window open, within a bound, while speech runs past its boundary.
+
+            On the device, fixed 4 s windows split utterances (「すね」, 「二識がおかしいぞ」).
+            The same sustained-sound threshold as the ASR gate decides whether the
+            last tail_seconds still sound; the window then closes in a pause instead.
+            """
+            if not extension or not activity:
+                return False
+            if (end - start) / 1e9 >= base_seconds + extension['max_extra_seconds']:
+                return False
+            if not ring.chunks:
+                return False
+            available = min(end, ring.chunks[-1]['end_ns'])
+            if available - start < 1e9:
+                return False
+            try:
+                audio = ring.slice(start, available, time.monotonic_ns())
+            except ValueError:
+                return False
+            signal_value = np.frombuffer(audio['pcm'], dtype='<i2').astype(np.float32) / 32768
+            frame_size = round(activity['frame_seconds'] * 16000)
+            frame_rms = np.sqrt(np.mean(signal_value[:len(signal_value) // frame_size * frame_size]
+                                        .reshape(-1, frame_size) ** 2, axis=1))
+            threshold = max(activity['frame_rms_min'],
+                            float(np.quantile(frame_rms, activity['floor_quantile'])) * activity['floor_ratio'])
+            tail = frame_rms[-max(1, round(extension['tail_seconds'] / activity['frame_seconds'])):]
+            return int(np.count_nonzero(tail > threshold)) >= extension['min_tail_active_frames']
         def learn_noise_floor():
             """Loudness only, during the pre-arm wait: no audio is saved or recognized."""
             span = int(live.get('window_seconds', 3) * 1e9)
@@ -486,7 +516,8 @@ def run_live(configuration):
                     c_sec = float(gate.pending['window_seconds'])
                     if 1 <= c_sec <= 30: target_win_sec = c_sec
                 except (ValueError, TypeError): pass
-            if frames and frame['native_ns']-frames[0]['native_ns'] >= target_win_sec*1e9:
+            if (frames and frame['native_ns']-frames[0]['native_ns'] >= target_win_sec*1e9
+                    and not speech_continues(frames[0]['native_ns'], frame['native_ns'], target_win_sec)):
                 start, end = frames[0]['native_ns'], frame['native_ns']
                 # No future samples. Wait briefly for the microphone's same-time data.
                 timeout = time.monotonic()+.4
@@ -508,6 +539,8 @@ def run_live(configuration):
                     window = {'window_id': f'live_{counter:06d}', 'interval_ns': [start, end],
                         'closed_available_ns': time.monotonic_ns(), 'frames': frames, 'audio': audio,
                         'audio_rms': audio_rms, 'audio_peak': audio_peak}
+                    if extension and activity:
+                        window['boundary_extension_seconds'] = max(0.0, round((end-start)/1e9 - target_win_sec, 3))
                     if energy_gate is not None:
                         window['asr_energy_gate'] = asr_energy_limits(energy_gate, audio_history)
                     audio_history.append((audio_rms, audio_peak))
@@ -518,6 +551,7 @@ def run_live(configuration):
                     emit({'event': 'window_closed', 'window_id': window['window_id'],
                           'interval_ns': window['interval_ns'], 'frames': len(frames),
                           'audio_samples': audio['sample_count'], 'audio_rms': audio_rms,
+                          'boundary_extension_seconds': window.get('boundary_extension_seconds'),
                           'audio_peak': audio_peak, 'closed_available_ns': window['closed_available_ns']})
                 else:
                     emit({'event': 'input_gap', 'interval_ns': [start, end], 'reason': 'audio_window_not_available'})
