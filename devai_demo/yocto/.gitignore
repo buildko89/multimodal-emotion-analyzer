@@ -1,0 +1,4 @@
+# Harvested device payloads are proprietary and large; they live in ARA_DEMO_PAYLOAD_DIR only.
+*.tar
+*.tar.*
+payload_manifest.json
