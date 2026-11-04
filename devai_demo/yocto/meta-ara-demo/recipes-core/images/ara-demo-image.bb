@@ -2,7 +2,9 @@ SUMMARY = "imx-image-full plus the device-verified V25 ARA demo (FRDM-IMX95 + Ki
 DESCRIPTION = "Same BSP image the demo was verified on (LF6.18.20-2.0.0, fsl-imx-xwayland), \
 with the V25 release, its Python runtimes, the ARA-2 LLM service and model."
 
-require recipes-fsl/images/imx-image-full.bb
+# This path is searched in BBPATH.  The recipe is under dynamic-layers/ of meta-imx-sdk
+# (active only with qt6-layer), and that subdirectory is not itself in BBPATH.
+require dynamic-layers/qt6-layer/recipes-fsl/images/imx-image-full.bb
 
 IMAGE_INSTALL:append = " packagegroup-ara-demo"
 
