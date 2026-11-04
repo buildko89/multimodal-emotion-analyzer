@@ -1,5 +1,10 @@
 SUMMARY = "Everything the V25 ARA demo needs on top of imx-image-full"
 
+# The dependencies are machine-specific BSP packages, and some are renamed at
+# packaging time (tensorflow-lite -> libtensorflow-lite2.19.0), which an allarch
+# packagegroup must not depend on. This has to be set before the inherit.
+PACKAGE_ARCH = "${MACHINE_ARCH}"
+
 inherit packagegroup
 
 RDEPENDS:${PN} = "\
